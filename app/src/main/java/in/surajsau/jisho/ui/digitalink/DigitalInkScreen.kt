@@ -57,7 +57,7 @@ fun DigitalInkScreen(
                     Column(modifier = Modifier.fillMaxWidth()) {
                         TextField(
                             value = state.finalText,
-                            onValueChange = {},
+                            onValueChange = { viewModel.onTextChanged(it) },
                             modifier = Modifier.fillMaxWidth(),
                             maxLines = 1,
                             textStyle = TextStyle(color = DigitalInkColors.Text, fontSize = 24.sp),

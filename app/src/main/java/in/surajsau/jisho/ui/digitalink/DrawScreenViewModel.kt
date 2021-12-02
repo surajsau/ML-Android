@@ -47,9 +47,7 @@ class DrawScreenViewModel @Inject constructor(
             if (it.isEmpty())
                 return@onEach
 
-            val finalText = _finalText.value.plus(it[0])
-            _finalText.value = finalText
-            translator.translate(finalText)
+            setFinalText(text = _finalText.value.plus(it[0]))
         }
         .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
@@ -111,7 +109,18 @@ class DrawScreenViewModel @Inject constructor(
     }
 
     fun onPredictionSelected(prediction: String) {
-        _finalText.value = _finalText.value.dropLast(1).plus(prediction)
+        setFinalText(text = _finalText.value.dropLast(1).plus(prediction))
+    }
+
+    fun onTextChanged(text: String) {
+        setFinalText(text)
+    }
+
+    private fun setFinalText(text: String) {
+        _finalText.value = text
+
+        if (text.isNotEmpty())
+            translator.translate(text)
     }
 
     fun onStop() {
