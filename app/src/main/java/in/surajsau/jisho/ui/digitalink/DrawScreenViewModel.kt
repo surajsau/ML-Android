@@ -11,14 +11,15 @@ import javax.inject.Inject
 
 @HiltViewModel
 class DrawScreenViewModel @Inject constructor(
-    private val digitalInk: DigitalInk
+    private val digitalInk: DigitalInk,
+    private val translator: Translator,
 ): ViewModel() {
 
     data class State(
         val resetCanvas: Boolean = false,
         val showModelStatusProgress: Boolean = false,
-        val modelStatusText: String = "",
         val finalText: String = "",
+        val translation: String = "",
         val predictions: List<String> = emptyList(),
     )
 
@@ -28,40 +29,62 @@ class DrawScreenViewModel @Inject constructor(
 
     private var finishRecordingJob: Job? = null
 
-    private val _modelStatus = MutableStateFlow<ModelStatusUi>(ModelStatusUi.None)
-    private val _predictions = MutableStateFlow<List<String>>(emptyList())
-    private val _resetCanvas = MutableStateFlow<Boolean>(false)
+    private val _digitalInkModelStatus = digitalInk.checkIfModelIsDownloaded()
+        .flatMapLatest {
+            if (it == MLKitModelStatus.Downloaded)
+                flowOf(it)
+            else
+                digitalInk.downloadModel()
+        }
+        .stateIn(viewModelScope, SharingStarted.Lazily, MLKitModelStatus.NotDownloaded)
+
+    private val _translatorModelStatus = translator.checkIfModelIsDownloaded()
+        .stateIn(viewModelScope, SharingStarted.Lazily, MLKitModelStatus.NotDownloaded)
+
+    private val _predictions = digitalInk.predictions
+        .consumeAsFlow()
+        .onEach {
+            if (it.isEmpty())
+                return@onEach
+
+            val finalText = _finalText.value.plus(it[0])
+            _finalText.value = finalText
+            translator.translate(finalText)
+        }
+        .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+
+    private val _translation = translator.translation
+        .consumeAsFlow()
+        .stateIn(viewModelScope, SharingStarted.Lazily, "")
+
     private val _finalText = MutableStateFlow<String>("")
+    private val _resetCanvas = MutableStateFlow<Boolean>(false)
 
     val state: StateFlow<State>
         get() = combine(
-            _modelStatus,
+            _digitalInkModelStatus,
+            _translatorModelStatus,
             _resetCanvas,
             _predictions,
-            _finalText,
-        ) { modelStatus, resetCanvas, predictions, finalText ->
+            _translation,
+            _finalText
+        ) { result ->
+            val digitalInkModelStatus = result[0] as MLKitModelStatus
+            val translatorModelStatus = result[1] as MLKitModelStatus
+            val resetCanvas = result[2] as Boolean
+            val predictions = result[3] as List<String>
+            val translation = result[4] as String
+            val finalText = result[5] as String
+            val areModelsDownloaded = digitalInkModelStatus == MLKitModelStatus.Downloaded && translatorModelStatus == MLKitModelStatus.Downloaded
+
             State(
                 resetCanvas = resetCanvas,
-                showModelStatusProgress = modelStatus != ModelStatusUi.Ready,
-                modelStatusText = when (modelStatus) {
-                    ModelStatusUi.CheckingDownload -> "Checking model..."
-                    ModelStatusUi.Downloading -> "Downloading model..."
-                    else -> ""
-                },
+                showModelStatusProgress = !areModelsDownloaded,
                 finalText = finalText,
+                translation = translation,
                 predictions = predictions
             )
-        }.stateIn(viewModelScope, SharingStarted.Lazily, State())
-
-    init {
-        digitalInk.checkIfModelIsDownloaded {
-            when (it) {
-                MLKitModelStatus.Downloading -> _modelStatus.value = ModelStatusUi.Downloading
-                MLKitModelStatus.Downloaded -> _modelStatus.value = ModelStatusUi.Ready
-                MLKitModelStatus.CheckingDownload -> _modelStatus.value = ModelStatusUi.CheckingDownload
-            }
-        }
-    }
+        }.stateIn(viewModelScope, SharingStarted.Eagerly, State())
 
     fun onEvent(event: Event) {
 
@@ -80,19 +103,20 @@ class DrawScreenViewModel @Inject constructor(
             is DrawEvent.Up -> {
                 this.finishRecordingJob = viewModelScope.launch {
                     delay(DEBOUNCE_INTERVAL)
-                    digitalInk.finishRecording { predictions ->
-                        _resetCanvas.value = true
-                        _predictions.value = predictions
-                        _finalText.value = _finalText.value.plus(predictions[0])
-                    }
+                    _resetCanvas.value = true
+                    digitalInk.finishRecording()
                 }
             }
         }
     }
 
     fun onPredictionSelected(prediction: String) {
-        _predictions.value = emptyList()
         _finalText.value = _finalText.value.dropLast(1).plus(prediction)
+    }
+
+    fun onStop() {
+        digitalInk.close()
+        translator.close()
     }
 
     companion object {

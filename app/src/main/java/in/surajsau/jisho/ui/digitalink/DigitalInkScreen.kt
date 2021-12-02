@@ -1,6 +1,7 @@
 package `in`.surajsau.jisho.ui.digitalink
 
 import `in`.surajsau.jisho.ui.theme.DigitalInkColors
+import `in`.surajsau.jisho.ui.theme.Purple700
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -12,11 +13,14 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 
 @Composable
 fun DigitalInkScreen(
@@ -24,12 +28,24 @@ fun DigitalInkScreen(
     modifier: Modifier = Modifier
 ) {
 
+    val lifecycleOwner = LocalLifecycleOwner.current
+
     val state by viewModel.state.collectAsState(DrawScreenViewModel.State())
+
+    DisposableEffect(Unit) {
+        val lifecycleObserver = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_STOP)
+                viewModel.onStop()
+        }
+
+        lifecycleOwner.lifecycle.addObserver(lifecycleObserver)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(lifecycleObserver) }
+    }
 
     Box(modifier = modifier) {
         if (state.showModelStatusProgress) {
             ModelStatusProgress(
-                statusText = state.modelStatusText,
+                statusText = "Checking models...",
                 modifier = Modifier
                     .align(Alignment.Center)
             )
@@ -38,27 +54,43 @@ fun DigitalInkScreen(
             Column(modifier = Modifier.fillMaxSize()) {
 
                 Card(elevation = 4.dp) {
-                    TextField(
-                        value = state.finalText,
-                        onValueChange = {},
-                        modifier = Modifier.fillMaxWidth(),
-                        maxLines = 1,
-                        textStyle = TextStyle(color = DigitalInkColors.Text, fontSize = 24.sp),
-                        colors = TextFieldDefaults.textFieldColors(
-                            backgroundColor = Color.White,
-                            placeholderColor = DigitalInkColors.PredictionPlaceholder,
-                            focusedIndicatorColor = Color.Transparent,
-                            unfocusedIndicatorColor = Color.Transparent,
-                            cursorColor = DigitalInkColors.PredictionText
-                        ),
-                        placeholder = {
-                            Text(
-                                text = "Enter text(Japanese)",
-                                fontSize = 24.sp,
-                            )
-                        },
-                        shape = RoundedCornerShape(0.dp)
-                    )
+                    Column(modifier = Modifier.fillMaxWidth()) {
+                        TextField(
+                            value = state.finalText,
+                            onValueChange = {},
+                            modifier = Modifier.fillMaxWidth(),
+                            maxLines = 1,
+                            textStyle = TextStyle(color = DigitalInkColors.Text, fontSize = 24.sp),
+                            colors = TextFieldDefaults.textFieldColors(
+                                backgroundColor = Color.White,
+                                placeholderColor = DigitalInkColors.PredictionPlaceholder,
+                                focusedIndicatorColor = Color.Transparent,
+                                unfocusedIndicatorColor = Color.Transparent,
+                                cursorColor = DigitalInkColors.PredictionText
+                            ),
+                            placeholder = {
+                                Text(
+                                    text = "Enter text(Japanese)",
+                                    fontSize = 24.sp,
+                                )
+                            },
+                            shape = RoundedCornerShape(0.dp)
+                        )
+
+                        Spacer(modifier = Modifier
+                            .fillMaxWidth()
+                            .height(1.dp)
+                            .background(Color.LightGray))
+
+                        Text(
+                            text = state.translation,
+                            fontSize = 24.sp,
+                            color = Purple700,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp)
+                        )
+                    }
                 }
                 
                 Spacer(modifier = Modifier.weight(1f, fill = true))

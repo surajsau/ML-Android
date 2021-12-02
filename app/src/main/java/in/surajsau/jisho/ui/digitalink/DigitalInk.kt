@@ -3,13 +3,16 @@ package `in`.surajsau.jisho.ui.digitalink
 import com.google.mlkit.common.model.DownloadConditions
 import com.google.mlkit.common.model.RemoteModelManager
 import com.google.mlkit.vision.digitalink.*
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
 import javax.inject.Inject
 
-enum class MLKitModelStatus {
-    Downloaded, CheckingDownload, Downloading
-}
-
 class DigitalInk @Inject constructor() {
+
+    val predictions = Channel<List<String>>(4)
 
     private var strokeBuilder: Ink.Stroke.Builder = Ink.Stroke.builder()
 
@@ -25,34 +28,43 @@ class DigitalInk @Inject constructor() {
             .build()
     )
 
-    private var writingArea: WritingArea? = null
+    fun checkIfModelIsDownloaded(): Flow<MLKitModelStatus> = callbackFlow {
+        trySend(MLKitModelStatus.CheckingDownload)
 
-    fun checkIfModelIsDownloaded(onStatusChanged: (MLKitModelStatus) -> Unit) {
-        onStatusChanged.invoke(MLKitModelStatus.CheckingDownload)
+        this@DigitalInk.remoteModelManager
+            .isModelDownloaded(this@DigitalInk.recognitionModel)
+            .addOnSuccessListener { isDownloaded ->
+                if (isDownloaded)
+                    trySend(MLKitModelStatus.Downloaded)
+                else
+                    trySend(MLKitModelStatus.NotDownloaded)
+            }
+            .addOnCompleteListener { close() }
+            .addOnFailureListener {
+                it.printStackTrace()
+                close(it)
+            }
 
+        awaitClose { cancel() }
+    }
+
+    fun downloadModel(): Flow<MLKitModelStatus> = callbackFlow {
         val downloadConditions = DownloadConditions.Builder()
             .build()
 
-        this.remoteModelManager
-            .isModelDownloaded(this.recognitionModel)
-            .addOnSuccessListener { isDownloaded ->
-                if (isDownloaded)
-                    onStatusChanged.invoke(MLKitModelStatus.Downloaded)
-                else {
-                    onStatusChanged.invoke(MLKitModelStatus.Downloading)
-                    this.remoteModelManager
-                        .download(this.recognitionModel, downloadConditions)
-                        .addOnSuccessListener {
-                            onStatusChanged.invoke(MLKitModelStatus.Downloaded)
-                        }
-                        .addOnFailureListener { it.printStackTrace() }
-                }
+        trySend(MLKitModelStatus.Downloading)
+        this@DigitalInk.remoteModelManager
+            .download(this@DigitalInk.recognitionModel, downloadConditions)
+            .addOnSuccessListener {
+                trySend(MLKitModelStatus.Downloaded)
             }
-            .addOnFailureListener { it.printStackTrace() }
-    }
+            .addOnCompleteListener { close() }
+            .addOnFailureListener {
+                it.printStackTrace()
+                close(it)
+            }
 
-    fun setWritingArea(width: Float, height: Float) {
-        this.writingArea = WritingArea(width, height)
+        awaitClose { cancel() }
     }
 
     fun record(x: Float, y: Float) {
@@ -60,15 +72,21 @@ class DigitalInk @Inject constructor() {
         this.strokeBuilder.addPoint(point)
     }
 
-    fun finishRecording(onPredicted: (List<String>) -> Unit) {
-        val stroke = this.strokeBuilder.build()
+    fun finishRecording() {
+        val stroke = this@DigitalInk.strokeBuilder.build()
 
         val inkBuilder = Ink.builder()
         inkBuilder.addStroke(stroke)
 
         this@DigitalInk.recognizer.recognize(inkBuilder.build())
-            .addOnCompleteListener { this.strokeBuilder = Ink.Stroke.builder() }
-            .addOnSuccessListener { result -> onPredicted.invoke(result.candidates.map { it.text }) }
+            .addOnCompleteListener {
+                this@DigitalInk.strokeBuilder = Ink.Stroke.builder()
+            }
+            .addOnSuccessListener { result -> this.predictions.trySend(result.candidates.map { it.text }) }
             .addOnFailureListener { it.printStackTrace() }
+    }
+
+    fun close() {
+        this.recognizer.close()
     }
 }

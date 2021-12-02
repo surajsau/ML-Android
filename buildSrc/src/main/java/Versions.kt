@@ -34,7 +34,8 @@ object Dep {
 
         const val Glide = "4.12.0"
 
-        const val MLKit = "17.0.0"
+        const val DigitalInk = "17.0.0"
+        const val Translation = "16.1.2"
     }
 
     object Compose {
@@ -112,7 +113,8 @@ object Dep {
     const val Coroutines = "org.jetbrains.kotlinx:kotlinx-coroutines-android:${Versions.Coroutines}"
 
     object MLKit {
-        const val DigitalInk = "com.google.mlkit:digital-ink-recognition:${Versions.MLKit}"
+        const val Translation = "com.google.mlkit:translate:${Versions.Translation}"
+        const val DigitalInk = "com.google.mlkit:digital-ink-recognition:${Versions.DigitalInk}"
     }
 }
 

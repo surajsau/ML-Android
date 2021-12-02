@@ -70,6 +70,7 @@ dependencies {
     kapt(Dep.Hilt.AndroidCompiler)
 
     implementation(Dep.MLKit.DigitalInk)
+    implementation(Dep.MLKit.Translation)
 
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.3")
