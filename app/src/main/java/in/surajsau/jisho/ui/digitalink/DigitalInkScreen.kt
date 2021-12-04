@@ -24,7 +24,7 @@ import androidx.lifecycle.LifecycleEventObserver
 
 @Composable
 fun DigitalInkScreen(
-    viewModel: DrawScreenViewModel = hiltViewModel(),
+    viewModel: DrawScreenViewModel,
     modifier: Modifier = Modifier
 ) {
 

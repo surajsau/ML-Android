@@ -1,5 +1,7 @@
 package `in`.surajsau.jisho.ui.digitalink
 
+import `in`.surajsau.jisho.data.DigitalInk
+import `in`.surajsau.jisho.data.Translator
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel

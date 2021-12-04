@@ -1,5 +1,6 @@
-package `in`.surajsau.jisho.ui.digitalink
+package `in`.surajsau.jisho.data
 
+import `in`.surajsau.jisho.ui.digitalink.MLKitModelStatus
 import com.google.mlkit.common.model.DownloadConditions
 import com.google.mlkit.nl.translate.TranslateLanguage
 import com.google.mlkit.nl.translate.Translation
