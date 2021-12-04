@@ -37,6 +37,7 @@ android {
     }
     buildFeatures {
         compose = true
+        mlModelBinding = true
     }
     composeOptions {
         kotlinCompilerExtensionVersion = "1.0.4"
@@ -64,6 +65,8 @@ dependencies {
     implementation(Dep.Compose.Navigation)
 
     implementation(Dep.Hilt.Core)
+    implementation(Dep.TensorFlow.Support)
+    implementation(Dep.TensorFlow.MetaData)
     kapt(Dep.Hilt.Compiler)
     implementation(Dep.Hilt.Compose)
     implementation(Dep.Hilt.ViewModel)
