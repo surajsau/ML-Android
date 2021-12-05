@@ -11,9 +11,9 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import javax.inject.Inject
 
-class DigitalInk @Inject constructor() {
+class DigitalInkProviderImpl @Inject constructor(): DigitalInkProvider {
 
-    val predictions = Channel<List<String>>(4)
+    override val predictions = Channel<List<String>>(4)
 
     private var strokeBuilder: Ink.Stroke.Builder = Ink.Stroke.builder()
 
@@ -29,11 +29,11 @@ class DigitalInk @Inject constructor() {
             .build()
     )
 
-    fun checkIfModelIsDownloaded(): Flow<MLKitModelStatus> = callbackFlow {
+    override fun checkIfModelIsDownlaoded(): Flow<MLKitModelStatus> = callbackFlow {
         trySend(MLKitModelStatus.CheckingDownload)
 
-        this@DigitalInk.remoteModelManager
-            .isModelDownloaded(this@DigitalInk.recognitionModel)
+        this@DigitalInkProviderImpl.remoteModelManager
+            .isModelDownloaded(this@DigitalInkProviderImpl.recognitionModel)
             .addOnSuccessListener { isDownloaded ->
                 if (isDownloaded)
                     trySend(MLKitModelStatus.Downloaded)
@@ -49,13 +49,13 @@ class DigitalInk @Inject constructor() {
         awaitClose { cancel() }
     }
 
-    fun downloadModel(): Flow<MLKitModelStatus> = callbackFlow {
+    override fun downloadModel(): Flow<MLKitModelStatus> = callbackFlow {
         val downloadConditions = DownloadConditions.Builder()
             .build()
 
         trySend(MLKitModelStatus.Downloading)
-        this@DigitalInk.remoteModelManager
-            .download(this@DigitalInk.recognitionModel, downloadConditions)
+        this@DigitalInkProviderImpl.remoteModelManager
+            .download(this@DigitalInkProviderImpl.recognitionModel, downloadConditions)
             .addOnSuccessListener {
                 trySend(MLKitModelStatus.Downloaded)
             }
@@ -68,26 +68,39 @@ class DigitalInk @Inject constructor() {
         awaitClose { cancel() }
     }
 
-    fun record(x: Float, y: Float) {
+    override fun record(x: Float, y: Float) {
         val point = Ink.Point.create(x, y)
         this.strokeBuilder.addPoint(point)
     }
 
-    fun finishRecording() {
-        val stroke = this@DigitalInk.strokeBuilder.build()
+    override fun finishRecording() {
+        val stroke = this@DigitalInkProviderImpl.strokeBuilder.build()
 
         val inkBuilder = Ink.builder()
         inkBuilder.addStroke(stroke)
 
-        this@DigitalInk.recognizer.recognize(inkBuilder.build())
+        this@DigitalInkProviderImpl.recognizer.recognize(inkBuilder.build())
             .addOnCompleteListener {
-                this@DigitalInk.strokeBuilder = Ink.Stroke.builder()
+                this@DigitalInkProviderImpl.strokeBuilder = Ink.Stroke.builder()
             }
             .addOnSuccessListener { result -> this.predictions.trySend(result.candidates.map { it.text }) }
             .addOnFailureListener { it.printStackTrace() }
     }
 
-    fun close() {
+    override fun close() {
         this.recognizer.close()
     }
+}
+
+interface DigitalInkProvider {
+
+    val predictions: Channel<List<String>>
+
+    fun finishRecording()
+    fun record(x: Float, y: Float)
+
+    fun downloadModel(): Flow<MLKitModelStatus>
+    fun checkIfModelIsDownlaoded(): Flow<MLKitModelStatus>
+
+    fun close()
 }

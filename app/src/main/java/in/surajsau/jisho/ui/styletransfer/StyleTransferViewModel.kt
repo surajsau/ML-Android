@@ -1,8 +1,10 @@
 package `in`.surajsau.jisho.ui.styletransfer
 
 import `in`.surajsau.jisho.base.SingleFlowViewModel
-import `in`.surajsau.jisho.data.StyleTransfer
+import `in`.surajsau.jisho.domain.ProcessImage
 import android.graphics.Bitmap
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.compositionLocalOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -45,5 +47,13 @@ interface StyleTransferViewModel: SingleFlowViewModel<StyleTransferViewModel.Eve
         data class StyleSelected(val fileName: String): Event()
     }
 
-    data class State(val output: Bitmap? = null)
+    data class State(
+        val output: Bitmap? = null,
+    )
 }
+
+val LocalStyleTransferViewModel = compositionLocalOf<StyleTransferViewModel> { error("StyleTransferViewModel not provided") }
+
+@Composable
+fun provideStyleTransferViewModel(viewModelProvider: @Composable () -> StyleTransferViewModel)
+    = LocalStyleTransferViewModel provides viewModelProvider.invoke()

@@ -1,5 +1,6 @@
 package `in`.surajsau.jisho.ui.digitalink
 
+import `in`.surajsau.jisho.base.use
 import `in`.surajsau.jisho.ui.theme.DigitalInkColors
 import `in`.surajsau.jisho.ui.theme.Purple700
 import androidx.compose.foundation.background
@@ -18,24 +19,22 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 
 @Composable
 fun DigitalInkScreen(
-    viewModel: DrawScreenViewModel,
     modifier: Modifier = Modifier
 ) {
 
     val lifecycleOwner = LocalLifecycleOwner.current
 
-    val state by viewModel.state.collectAsState(DrawScreenViewModel.State())
+    val (state, event) = use(LocalDigitalInkViewModel.current)
 
     DisposableEffect(Unit) {
         val lifecycleObserver = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_STOP)
-                viewModel.onStop()
+                event(DigitalInkViewModel.Event.OnStop)
         }
 
         lifecycleOwner.lifecycle.addObserver(lifecycleObserver)
@@ -57,7 +56,7 @@ fun DigitalInkScreen(
                     Column(modifier = Modifier.fillMaxWidth()) {
                         TextField(
                             value = state.finalText,
-                            onValueChange = { viewModel.onTextChanged(it) },
+                            onValueChange = { event(DigitalInkViewModel.Event.TextChanged(it)) },
                             modifier = Modifier.fillMaxWidth(),
                             maxLines = 1,
                             textStyle = TextStyle(color = DigitalInkColors.Text, fontSize = 24.sp),
@@ -104,14 +103,14 @@ fun DigitalInkScreen(
                     items(state.predictions) { prediction ->
                         Prediction(
                             text = prediction,
-                            onClick = { viewModel.onPredictionSelected(it) }
+                            onClick = { DigitalInkViewModel.Event.PredictionSelected(it) }
                         )
                     }
                 }
 
                 DrawSpace(
                     reset = state.resetCanvas,
-                    onDrawEvent = { viewModel.onEvent(DrawScreenViewModel.Event.Pointer(it)) },
+                    onDrawEvent = { event(DigitalInkViewModel.Event.Pointer(it)) },
                     modifier = Modifier
                         .fillMaxWidth()
                         .weight(1f, fill = true)

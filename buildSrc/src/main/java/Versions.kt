@@ -16,7 +16,7 @@ object Dep {
 
         const val Work = "2.7.0"
         const val Coil = "1.4.0"
-        const val Accompanist = "0.20.0"
+        const val Accompanist = "0.21.4-beta"
 
         const val ExoPlayer = "2.15.1"
 
@@ -36,6 +36,8 @@ object Dep {
 
         const val DigitalInk = "17.0.0"
         const val Translation = "16.1.2"
+
+        const val CameraX = "1.0.1"
     }
 
     object Compose {
@@ -71,11 +73,13 @@ object Dep {
 
     object Coil {
         const val Compose = "io.coil-kt:coil-compose:${Versions.Coil}"
+        const val Gif = "io.coil-kt:coil-gif:${Versions.Coil}"
         const val Video = "io.coil-kt:coil-video:${Versions.Coil}"
     }
 
     object Accompanist {
         const val SwipeRefresh = "com.google.accompanist:accompanist-swiperefresh:${Versions.Accompanist}"
+        const val Permissions = "com.google.accompanist:accompanist-permissions:${Versions.Accompanist}"
     }
 
     object ExoPlayer {
@@ -106,6 +110,12 @@ object Dep {
     object Glide {
         const val Core = "com.github.bumptech.glide:glide:${Versions.Glide}"
         const val Compiler = "com.github.bumptech.glide:compiler:${Versions.Glide}"
+    }
+
+    object CameraX {
+        const val Core = "androidx.camera:camera-camera2:${Versions.CameraX}"
+        const val Lifecycle = "androidx.camera:camera-lifecycle:${Versions.CameraX}"
+        const val View = "androidx.camera:camera-view:1.0.0-alpha27"
     }
 
     const val Gson = "com.google.code.gson:gson:${Versions.Gson}"

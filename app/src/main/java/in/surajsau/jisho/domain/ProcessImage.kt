@@ -1,4 +1,4 @@
-package `in`.surajsau.jisho.ui.styletransfer
+package `in`.surajsau.jisho.domain
 
 import `in`.surajsau.jisho.data.FileProvider
 import `in`.surajsau.jisho.data.StyleTransfer

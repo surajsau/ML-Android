@@ -4,6 +4,7 @@ plugins {
     id("com.android.application")
     id("dagger.hilt.android.plugin")
     id("kotlin-android")
+    id("kotlin-android-extensions")
     id("kotlin-kapt")
 }
 
@@ -64,6 +65,13 @@ dependencies {
     implementation(Dep.Compose.Activity)
     implementation(Dep.Compose.Navigation)
 
+    implementation(Dep.CameraX.Core)
+    implementation(Dep.CameraX.Lifecycle)
+    implementation(Dep.CameraX.View)
+
+    implementation(Dep.Accompanist.SwipeRefresh)
+    implementation(Dep.Accompanist.Permissions)
+
     implementation(Dep.Hilt.Core)
     implementation(Dep.TensorFlow.Support)
     implementation(Dep.TensorFlow.MetaData)
@@ -74,6 +82,9 @@ dependencies {
 
     implementation(Dep.MLKit.DigitalInk)
     implementation(Dep.MLKit.Translation)
+
+    implementation(Dep.Coil.Compose)
+    implementation(Dep.Coil.Gif)
 
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.3")

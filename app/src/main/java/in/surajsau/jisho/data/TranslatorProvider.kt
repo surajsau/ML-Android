@@ -12,9 +12,9 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import javax.inject.Inject
 
-class Translator @Inject constructor() {
+class TranslatorProviderImpl @Inject constructor(): TranslatorProvider {
 
-    val translation = Channel<String>(4)
+    override val translation = Channel<String>(4)
 
     private val translatorOptions = TranslatorOptions.Builder()
         .setSourceLanguage(TranslateLanguage.JAPANESE)
@@ -23,12 +23,12 @@ class Translator @Inject constructor() {
 
     private val translator = Translation.getClient(this.translatorOptions)
 
-    fun checkIfModelIsDownloaded(): Flow<MLKitModelStatus> = callbackFlow {
+    override fun checkIfModelIsDownloaded(): Flow<MLKitModelStatus> = callbackFlow {
         trySend(MLKitModelStatus.CheckingDownload)
         val downloadConditions = DownloadConditions.Builder()
             .build()
 
-        this@Translator.translator.downloadModelIfNeeded(downloadConditions)
+        this@TranslatorProviderImpl.translator.downloadModelIfNeeded(downloadConditions)
             .addOnSuccessListener {
                 trySend(MLKitModelStatus.Downloaded)
             }
@@ -41,13 +41,23 @@ class Translator @Inject constructor() {
         awaitClose { cancel()  }
     }
 
-    fun translate(text: String) {
+    override fun translate(text: String) {
         this.translator.translate(text)
             .addOnSuccessListener { this.translation.trySend(it) }
             .addOnFailureListener { it.printStackTrace() }
     }
 
-    fun close() {
+    override fun close() {
         this.translator.close()
     }
+}
+
+interface TranslatorProvider {
+
+    val translation: Channel<String>
+
+    fun checkIfModelIsDownloaded(): Flow<MLKitModelStatus>
+    fun translate(text: String)
+
+    fun close()
 }
