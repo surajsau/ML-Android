@@ -33,9 +33,7 @@ fun HomeScreen(
     navigateToDestination: (Destinations) -> Unit
 ) {
 
-    val (state, event) = use(LocalHomeViewModel.current)
-    
-    state.destination?.let { navigateToDestination.invoke(it) }
+    val (state, _) = use(LocalHomeViewModel.current)
 
     Box(modifier = modifier) {
         LazyColumn(
@@ -46,7 +44,7 @@ fun HomeScreen(
 
                 ScreenCard(
                     screen = screen,
-                    onClick = { event(HomeViewModel.Event.NavigateTo(it)) }
+                    onClick = { navigateToDestination.invoke(it) }
                 )
             }
         }
@@ -76,7 +74,7 @@ fun ScreenCard(
     )
     
     Row(
-        modifier = Modifier
+        modifier = modifier
             .clickable { onClick.invoke(screen.destinations) }
             .fillMaxWidth()
             .height(200.dp)
@@ -109,6 +107,7 @@ fun ScreenCard(
             Text(
                 text = screen.description,
                 modifier = Modifier.fillMaxWidth()
+                    .padding(top = 8.dp)
             )
         }
     }

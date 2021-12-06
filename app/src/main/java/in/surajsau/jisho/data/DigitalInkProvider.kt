@@ -74,14 +74,14 @@ class DigitalInkProviderImpl @Inject constructor(): DigitalInkProvider {
     }
 
     override fun finishRecording() {
-        val stroke = this@DigitalInkProviderImpl.strokeBuilder.build()
+        val stroke = this.strokeBuilder.build()
 
         val inkBuilder = Ink.builder()
         inkBuilder.addStroke(stroke)
 
-        this@DigitalInkProviderImpl.recognizer.recognize(inkBuilder.build())
+        this.recognizer.recognize(inkBuilder.build())
             .addOnCompleteListener {
-                this@DigitalInkProviderImpl.strokeBuilder = Ink.Stroke.builder()
+                this.strokeBuilder = Ink.Stroke.builder()
             }
             .addOnSuccessListener { result -> this.predictions.trySend(result.candidates.map { it.text }) }
             .addOnFailureListener { it.printStackTrace() }

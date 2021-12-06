@@ -11,7 +11,7 @@ import javax.inject.Inject
 
 class FileProviderImpl @Inject constructor(private val context: Context): FileProvider {
 
-    override fun fetchBitmap(fileName: String): Flow<Bitmap> = flow {
+    override fun fetchBitmap(fileName: String) : Bitmap {
         val cacheDir = context.externalCacheDir ?: error("No external cache found")
         val bitmap = runCatching {
             val imageFile = File(cacheDir, fileName)
@@ -20,11 +20,11 @@ class FileProviderImpl @Inject constructor(private val context: Context): FilePr
             BitmapFactory.decodeStream(inputStream)
         }.onFailure { error(it) }
 
-        emit(bitmap.getOrElse { error(it) })
+        return bitmap.getOrElse { error(it) }
     }
 }
 
 interface FileProvider {
 
-    fun fetchBitmap(fileName: String): Flow<Bitmap>
+    fun fetchBitmap(fileName: String): Bitmap
 }

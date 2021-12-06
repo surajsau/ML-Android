@@ -16,6 +16,14 @@ class ScreensDataProviderImpl @Inject constructor(): ScreensDataProvider {
                     title = "On-device Google Translate",
                     description = "Character Recognition & Translation using Google MLKit",
                     tags = listOf("MLKit")
+                ),
+
+                Screen(
+                    destinations = Destinations.StyleTransfer,
+                    previewImage = "",
+                    title = "Style Transfer",
+                    description = "Character Recognition & Translation using Google MLKit",
+                    tags = listOf("MLKit")
                 )
             )
         )

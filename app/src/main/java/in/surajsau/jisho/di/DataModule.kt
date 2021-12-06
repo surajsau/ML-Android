@@ -28,6 +28,7 @@ abstract class DataModule {
         fun provideFileProvider(@ApplicationContext context: Context): FileProvider = FileProviderImpl(context)
 
         @Provides
-        fun provideStyleTransfer(@ApplicationContext context: Context) = StyleTransfer(context)
+        fun provideStyleTransfer(@ApplicationContext context: Context, fileProvider: FileProvider): StyleTransferProvider
+            = StyleTransferProviderImpl(context, fileProvider)
     }
 }

@@ -1,6 +1,8 @@
 package `in`.surajsau.jisho.ui.digitalink
 
 import `in`.surajsau.jisho.base.SingleFlowViewModel
+import `in`.surajsau.jisho.data.DigitalInkProvider
+import `in`.surajsau.jisho.data.TranslatorProvider
 import `in`.surajsau.jisho.domain.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.compositionLocalOf
@@ -15,25 +17,26 @@ import javax.inject.Inject
 
 @HiltViewModel
 class DigitalInkViewModelImpl @Inject constructor(
-    downloadDigitalInkIfNeeded: DownloadDigitalInkIfNeeded,
-    downloadTranslatorIfNeeded: DownloadTranslatorIfNeeded,
-    consumePrediction: ConsumePrediction,
-    consumeTranslation: ConsumeTranslation,
-    private val fetchTranslation: FetchTranslation,
-    private val recordCoordinate: RecordCoordinate,
-    private val finishedRecording: FinishedRecording,
-    private val closeMLKit: CloseMLKit,
+    private val digitalInkProvider: DigitalInkProvider,
+    private val translatorProvider: TranslatorProvider
 ): ViewModel(), DigitalInkViewModel {
 
     private var finishRecordingJob: Job? = null
 
-    private val _digitalInkModelStatus = downloadDigitalInkIfNeeded.invoke()
+    private val _digitalInkModelStatus = digitalInkProvider.checkIfModelIsDownlaoded()
+        .flatMapLatest { status ->
+            if (status == MLKitModelStatus.Downloaded)
+                flowOf(status)
+            else
+                digitalInkProvider.downloadModel()
+        }
         .stateIn(viewModelScope, SharingStarted.Lazily, MLKitModelStatus.NotDownloaded)
 
-    private val _translatorModelStatus = downloadTranslatorIfNeeded.invoke()
+    private val _translatorModelStatus = translatorProvider.checkIfModelIsDownloaded()
         .stateIn(viewModelScope, SharingStarted.Lazily, MLKitModelStatus.NotDownloaded)
 
-    private val _predictions = consumePrediction.invoke()
+    private val _predictions = digitalInkProvider.predictions
+        .consumeAsFlow()
         .onEach {
             if (it.isEmpty())
                 return@onEach
@@ -42,7 +45,8 @@ class DigitalInkViewModelImpl @Inject constructor(
         }
         .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
-    private val _translation = consumeTranslation.invoke()
+    private val _translation = translatorProvider.translation
+        .consumeAsFlow()
         .stateIn(viewModelScope, SharingStarted.Lazily, "")
 
     private val _finalText = MutableStateFlow<String>("")
@@ -84,24 +88,27 @@ class DigitalInkViewModelImpl @Inject constructor(
                         this.finishRecordingJob?.cancel()
                         _resetCanvas.value = false
 
-                        recordCoordinate.invoke(drawEvent.x, drawEvent.y)
+                        digitalInkProvider.record(drawEvent.x, drawEvent.y)
                     }
 
                     is DrawEvent.Move -> {
-                        recordCoordinate.invoke(drawEvent.x, drawEvent.y)
+                        digitalInkProvider.record(drawEvent.x, drawEvent.y)
                     }
 
                     is DrawEvent.Up -> {
                         this.finishRecordingJob = viewModelScope.launch {
                             delay(DEBOUNCE_INTERVAL)
                             _resetCanvas.value = true
-                            finishedRecording.invoke()
+                            digitalInkProvider.finishRecording()
                         }
                     }
                 }
             }
 
-            is DigitalInkViewModel.Event.OnStop -> closeMLKit.invoke()
+            is DigitalInkViewModel.Event.OnStop -> {
+                digitalInkProvider.close()
+                translatorProvider.close()
+            }
 
             is DigitalInkViewModel.Event.TextChanged -> {
                 setFinalText(event.text)
@@ -117,7 +124,7 @@ class DigitalInkViewModelImpl @Inject constructor(
         _finalText.value = text
 
         if (text.isNotEmpty())
-            fetchTranslation.invoke(text)
+            translatorProvider.translate(text)
     }
 
     companion object {

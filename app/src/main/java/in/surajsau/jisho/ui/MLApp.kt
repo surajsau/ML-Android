@@ -25,7 +25,7 @@ import androidx.navigation.compose.rememberNavController
 fun MLApp(
     navigateToSettings: () -> Unit
 ) {
-    val navigationController = rememberNavController()
+    val navController = rememberNavController()
     
     JishoTheme {
         // A surface container using the 'background' color from the theme
@@ -33,13 +33,13 @@ fun MLApp(
             modifier = Modifier.fillMaxSize(),
             color = MaterialTheme.colors.background
         ) {
-            NavHost(navController = navigationController, startDestination = Destinations.Home.value) {
+            NavHost(navController = navController, startDestination = Destinations.Home.value) {
                 composable(route = Destinations.Home.value) {
                     CompositionLocalProvider(
                         provideHomeViewModelFactory { hiltViewModel<HomeViewModelImpl>() }
                     ) {
                         HomeScreen(
-                            navigateToDestination = { navigationController.navigate(route = it.value) },
+                            navigateToDestination = { navController.navigate(route = it.value) },
                             modifier = Modifier.fillMaxSize()
                         )
                     }
@@ -59,7 +59,7 @@ fun MLApp(
                     ) {
                         StyleTransferScreen(
                             modifier = Modifier.fillMaxSize(),
-                            navigateBack = { navigationController.popBackStack() },
+                            navigateBack = { navController.popBackStack() },
                             navigateToSettings = navigateToSettings
                         )
                     }

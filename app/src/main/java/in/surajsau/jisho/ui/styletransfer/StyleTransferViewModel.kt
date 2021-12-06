@@ -1,7 +1,7 @@
 package `in`.surajsau.jisho.ui.styletransfer
 
 import `in`.surajsau.jisho.base.SingleFlowViewModel
-import `in`.surajsau.jisho.domain.ProcessImage
+import `in`.surajsau.jisho.data.StyleTransferProvider
 import android.graphics.Bitmap
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.compositionLocalOf
@@ -13,7 +13,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class StyleTransferViewModelImpl @Inject constructor(
-    private val processImage: ProcessImage
+    private val styleTransferProvider: StyleTransferProvider,
 ) : ViewModel(), StyleTransferViewModel {
 
     private val _cameraImage = MutableStateFlow<String>("")
@@ -23,7 +23,9 @@ class StyleTransferViewModelImpl @Inject constructor(
         _cameraImage.filter { it.isNotEmpty() },
         _styleImage.filter { it.isNotEmpty() },
         transform = { cameraImage, styleImage -> Pair(cameraImage, styleImage) }
-    ).flatMapLatest { (target, style) -> processImage.invoke(targetImagePath = target, styleImagePath = style) }
+    ).flatMapLatest { (targetPath, stylePath) ->
+        styleTransferProvider.process(targetPath, stylePath)
+    }
 
     override val state: StateFlow<StyleTransferViewModel.State>
         get() = _styleTransferedImage
@@ -36,7 +38,6 @@ class StyleTransferViewModelImpl @Inject constructor(
             is StyleTransferViewModel.Event.StyleSelected -> _styleImage.value = event.fileName
         }
     }
-
 
 }
 
