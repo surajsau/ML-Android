@@ -52,8 +52,10 @@ interface StyleTransferViewModel: SingleFlowViewModel<StyleTransferViewModel.Eve
     )
 }
 
-val LocalStyleTransferViewModel = compositionLocalOf<StyleTransferViewModel> { error("StyleTransferViewModel not provided") }
+val LocalStyleTransferViewModel = compositionLocalOf<StyleTransferViewModel> {
+    error("StyleTransferViewModel not provided")
+}
 
 @Composable
-fun provideStyleTransferViewModel(viewModelProvider: @Composable () -> StyleTransferViewModel)
-    = LocalStyleTransferViewModel provides viewModelProvider.invoke()
+fun provideStyleTransferViewModel(factory: @Composable () -> StyleTransferViewModel)
+    = LocalStyleTransferViewModel provides factory.invoke()

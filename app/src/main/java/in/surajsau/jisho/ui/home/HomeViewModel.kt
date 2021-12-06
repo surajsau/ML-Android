@@ -53,8 +53,10 @@ interface HomeViewModel: SingleFlowViewModel<HomeViewModel.Event, HomeViewModel.
 
 }
 
-val LocalHomeViewModel = compositionLocalOf<HomeViewModel> { error("HomeViewModel not provided") }
+val LocalHomeViewModel = compositionLocalOf<HomeViewModel> {
+    error("HomeViewModel not provided")
+}
 
 @Composable
-fun provideHomeViewModelFactory(viewModelProvider: @Composable () -> HomeViewModel)
-    = LocalHomeViewModel provides viewModelProvider.invoke()
+fun provideHomeViewModelFactory(viewModelFactory: @Composable () -> HomeViewModel)
+    = LocalHomeViewModel provides viewModelFactory.invoke()

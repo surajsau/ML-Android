@@ -38,7 +38,10 @@ fun HomeScreen(
     state.destination?.let { navigateToDestination.invoke(it) }
 
     Box(modifier = modifier) {
-        LazyColumn(modifier = Modifier.fillMaxSize()) {
+        LazyColumn(
+            modifier = Modifier.fillMaxSize()
+                .padding(16.dp)
+        ) {
             items(state.screens) { screen ->
 
                 ScreenCard(

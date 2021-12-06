@@ -144,8 +144,10 @@ interface DigitalInkViewModel: SingleFlowViewModel<DigitalInkViewModel.Event, Di
     }
 }
 
-val LocalDigitalInkViewModel = compositionLocalOf<DigitalInkViewModel>{ error("LocalDigitalViewModelFactory not provided") }
+val LocalDigitalInkViewModel = compositionLocalOf<DigitalInkViewModel> {
+    error("LocalDigitalViewModelFactory not provided")
+}
 
 @Composable
-fun provideDigitalInkViewModel(viewModelProvider: @Composable () -> DigitalInkViewModel)
-    = LocalDigitalInkViewModel provides viewModelProvider.invoke()
+fun provideDigitalInkViewModel(viewModelFactory: @Composable () -> DigitalInkViewModel)
+    = LocalDigitalInkViewModel provides viewModelFactory.invoke()
