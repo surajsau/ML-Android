@@ -103,7 +103,12 @@ fun PermissionRationale(
                 colors = ButtonDefaults.buttonColors(
                     backgroundColor = Color.Transparent,
                     contentColor = Purple500
-                )
+                ),
+                elevation = ButtonDefaults
+                    .elevation(
+                        defaultElevation = 0.dp,
+                        pressedElevation = 0.dp
+                    )
             ) {
                 Text(text = "Cancel",
                     fontWeight = FontWeight.Normal,
@@ -117,10 +122,15 @@ fun PermissionRationale(
                 colors = ButtonDefaults.buttonColors(
                     backgroundColor = Color.Transparent,
                     contentColor = Purple500
-                )
+                ),
+                elevation = ButtonDefaults
+                    .elevation(
+                        defaultElevation = 0.dp,
+                        pressedElevation = 0.dp
+                    )
             ) {
-                Text(text = "Cancel",
-                    fontWeight = FontWeight.Normal,
+                Text(text = "Allow",
+                    fontWeight = FontWeight.Medium,
                     fontSize = 18.sp,
                     modifier = Modifier.padding(8.dp)
                 )

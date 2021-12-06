@@ -11,17 +11,18 @@ import org.tensorflow.lite.support.image.TensorImage
 import org.tensorflow.lite.support.tensorbuffer.TensorBuffer
 import javax.inject.Inject
 
+enum class StyleCacheStatus { Downloaded, Checking }
+
 class StyleTransferProviderImpl @Inject constructor(
     private val context: Context,
-    private val fileProvider: FileProvider,
 ): StyleTransferProvider {
 
     private val stylePredictorModel = StylePredictorModel.newInstance(context)
     private val styleTransferModel = StyleTransferModel.newInstance(context)
 
-    override fun process(targetImagePath: String, styleImagePath: String): Flow<Bitmap> = flow {
-        val styleTensor = TensorImage.fromBitmap(fileProvider.fetchBitmap(styleImagePath))
-        val targetTensor = TensorImage.fromBitmap(fileProvider.fetchBitmap(targetImagePath))
+    override fun process(targetImage: Bitmap, styleImage: Bitmap): Flow<Bitmap> = flow {
+        val styleTensor = TensorImage.fromBitmap(styleImage)
+        val targetTensor = TensorImage.fromBitmap(targetImage)
         val styleOutput = stylePredictorModel.process(styleTensor).styleBottleneckAsTensorBuffer
 
         val styleBottleneck = TensorBuffer.createFixedSize(intArrayOf(1, 1, 1, 100), DataType.FLOAT32).apply {
@@ -31,17 +32,17 @@ class StyleTransferProviderImpl @Inject constructor(
         val output = styleTransferModel.process(targetTensor, styleBottleneck).styledImageAsTensorImage
         emit(output.bitmap)
     }
+}
+
+interface StyleTransferProvider {
+
+    fun process(targetImage: Bitmap, styleImage: Bitmap): Flow<Bitmap>
 
     companion object {
         private const val BottleNeckSize = 100
         private const val StyleImageSize = 256
         private const val ContentImageSize = 384
 
-
+        val Styles = listOf("", "")
     }
-}
-
-interface StyleTransferProvider {
-
-    fun process(targetImagePath: String, styleImagePath: String): Flow<Bitmap>
 }

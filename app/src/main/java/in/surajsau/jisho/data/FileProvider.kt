@@ -16,10 +16,16 @@ class FileProviderImpl @Inject constructor(private val context: Context): FilePr
         val bitmap = runCatching {
             val imageFile = File(cacheDir, fileName)
             val inputStream = FileInputStream(imageFile)
-
             BitmapFactory.decodeStream(inputStream)
         }.onFailure { error(it) }
 
+        return bitmap.getOrElse { error(it) }
+    }
+
+    override fun fetchAssetBitmap(fileName: String): Bitmap {
+        val bitmap = runCatching {
+            with(context.assets.open(fileName)) { BitmapFactory.decodeStream(this) }
+        }
         return bitmap.getOrElse { error(it) }
     }
 }
@@ -27,4 +33,6 @@ class FileProviderImpl @Inject constructor(private val context: Context): FilePr
 interface FileProvider {
 
     fun fetchBitmap(fileName: String): Bitmap
+
+    fun fetchAssetBitmap(fileName: String): Bitmap
 }

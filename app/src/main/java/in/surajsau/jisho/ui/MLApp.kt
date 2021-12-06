@@ -1,14 +1,16 @@
 package `in`.surajsau.jisho.ui
 
+import `in`.surajsau.jisho.base.BitmapCache
+import `in`.surajsau.jisho.base.LocalBitmapCache
 import `in`.surajsau.jisho.ui.digitalink.DigitalInkScreen
 import `in`.surajsau.jisho.ui.digitalink.DigitalInkViewModelImpl
-import `in`.surajsau.jisho.ui.digitalink.provideDigitalInkViewModel
+import `in`.surajsau.jisho.ui.digitalink.LocalDigitalInkViewModel
 import `in`.surajsau.jisho.ui.home.HomeScreen
 import `in`.surajsau.jisho.ui.home.HomeViewModelImpl
-import `in`.surajsau.jisho.ui.home.provideHomeViewModelFactory
+import `in`.surajsau.jisho.ui.home.LocalHomeViewModel
+import `in`.surajsau.jisho.ui.styletransfer.LocalStyleTransferViewModel
 import `in`.surajsau.jisho.ui.styletransfer.StyleTransferScreen
 import `in`.surajsau.jisho.ui.styletransfer.StyleTransferViewModelImpl
-import `in`.surajsau.jisho.ui.styletransfer.provideStyleTransferViewModel
 import `in`.surajsau.jisho.ui.theme.JishoTheme
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.MaterialTheme
@@ -36,7 +38,7 @@ fun MLApp(
             NavHost(navController = navController, startDestination = Destinations.Home.value) {
                 composable(route = Destinations.Home.value) {
                     CompositionLocalProvider(
-                        provideHomeViewModelFactory { hiltViewModel<HomeViewModelImpl>() }
+                        LocalHomeViewModel provides hiltViewModel<HomeViewModelImpl>()
                     ) {
                         HomeScreen(
                             navigateToDestination = { navController.navigate(route = it.value) },
@@ -46,7 +48,7 @@ fun MLApp(
                 }
                 composable(route = Destinations.DigitalInk.value) {
                     CompositionLocalProvider(
-                        provideDigitalInkViewModel { hiltViewModel<DigitalInkViewModelImpl>() }
+                        LocalDigitalInkViewModel provides  hiltViewModel<DigitalInkViewModelImpl>(),
                     ) {
                         DigitalInkScreen(
                             modifier = Modifier.fillMaxSize()
@@ -55,7 +57,8 @@ fun MLApp(
                 }
                 composable(route = Destinations.StyleTransfer.value) {
                     CompositionLocalProvider(
-                        provideStyleTransferViewModel { hiltViewModel<StyleTransferViewModelImpl>() }
+                        LocalStyleTransferViewModel provides hiltViewModel<StyleTransferViewModelImpl>(),
+                        LocalBitmapCache provides BitmapCache()
                     ) {
                         StyleTransferScreen(
                             modifier = Modifier.fillMaxSize(),
