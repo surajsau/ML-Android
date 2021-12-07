@@ -7,13 +7,17 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
@@ -101,7 +105,7 @@ fun StylePreviewScreen(
     modifier: Modifier = Modifier,
 ) {
 
-    Column(modifier = modifier) {
+    Column(modifier = modifier.background(Color.Black)) {
 
         Box(modifier = Modifier
             .fillMaxWidth()
@@ -132,13 +136,7 @@ fun ImagePreview(
         }
 
         if (showLoader) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color.Black)
-                    .alpha(0.5f)
-            )
-            CircularProgressIndicator()
+            CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
         }
     }
 }
@@ -150,19 +148,22 @@ fun PreviewGallery(
     onStyleSelected: (String) -> Unit
 ) {
 
-    LazyColumn(
+    LazyRow(
         modifier = modifier
             .fillMaxWidth()
             .padding(16.dp)
     ) {
-        items(previews) { fileName ->
+        itemsIndexed(previews) { index, fileName ->
             PreviewGalleryItem(
                 fileName = fileName,
                 onClick = { onStyleSelected.invoke(it) },
                 modifier = Modifier
                     .width(96.dp)
-                    .height(256.dp)
-                    .padding(start = 8.dp)
+                    .height(96.dp)
+                    .padding(
+                        start = if (index == 0) 16.dp else 0.dp,
+                        end = 16.dp
+                    )
             )
         }
     }
@@ -202,7 +203,8 @@ fun PreviewGalleryItem(
             bitmap = previewBitmap!!.asImageBitmap(),
             contentDescription = null,
             modifier = modifier
-                .clip(RoundedCornerShape(2.dp))
+                .border(width = 2.dp, color = Color.White, shape = RoundedCornerShape(4.dp))
+                .clip(RoundedCornerShape(4.dp))
                 .clipToBounds()
                 .clickable { onClick.invoke(fileName) },
             contentScale = ContentScale.Crop

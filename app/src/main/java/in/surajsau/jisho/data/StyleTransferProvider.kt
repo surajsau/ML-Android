@@ -26,7 +26,7 @@ class StyleTransferProviderImpl @Inject constructor(
         val targetTensor = TensorImage.fromBitmap(targetImage)
         val styleOutput = stylePredictorModel.process(styleTensor).styleBottleneckAsTensorBuffer
 
-        val styleBottleneck = TensorBuffer.createFixedSize(intArrayOf(1, 1, 1, 100), DataType.FLOAT32).apply {
+        val styleBottleneck = TensorBuffer.createFixedSize(intArrayOf(1, 1, 1, StyleTransferProvider.BottleNeckSize), DataType.FLOAT32).apply {
             loadBuffer(styleOutput.buffer)
         }
 
@@ -46,10 +46,10 @@ interface StyleTransferProvider {
     }
 
     companion object {
-        private const val BottleNeckSize = 100
-        private const val StyleImageSize = 256
-        private const val ContentImageSize = 384
+        const val BottleNeckSize = 100
+        const val StyleImageSize = 256
+        const val ContentImageSize = 384
 
-        val Styles = listOf("scream.png", "van_gogh.png")
+        val Styles = (0..25).map { "style$it.jpg" }
     }
 }
