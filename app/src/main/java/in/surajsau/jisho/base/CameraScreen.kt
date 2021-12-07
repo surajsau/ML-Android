@@ -1,21 +1,28 @@
 package `in`.surajsau.jisho.ui.styletransfer
 
+import `in`.surajsau.jisho.R
+import android.view.Surface.ROTATION_270
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageCapture
 import androidx.camera.core.ImageCaptureException
 import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
@@ -53,10 +60,13 @@ fun CameraScreen(
                 .fillMaxWidth()
                 .weight(1f),
             imageCapture = imageCapture,
+            cameraSelector = cameraSelector
         )
 
         CameraControls(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f),
             onCameraAction = {
                 when (it) {
                     is CameraAction.Click -> {
@@ -98,38 +108,35 @@ private fun Camera(
 
     val lifecycleOwner = LocalLifecycleOwner.current
 
-    val coroutineScope = rememberCoroutineScope()
+    val context = LocalContext.current
 
-    AndroidView(modifier = modifier, factory = { context ->
-        val previewView = PreviewView(context).apply {
-            this.scaleType = scaleType
+    val previewView = remember { PreviewView(context).apply { this.scaleType = scaleType } }
+
+    LaunchedEffect(cameraSelector) {
+        val cameraProvider = suspendCoroutine<ProcessCameraProvider> { continuation ->
+            ProcessCameraProvider.getInstance(context).also { future ->
+                future.addListener({
+                    continuation.resume(future.get())
+                }, ContextCompat.getMainExecutor(context))
+            }
         }
 
         val previewUseCase = Preview.Builder()
             .build()
             .also { it.setSurfaceProvider(previewView.surfaceProvider) }
 
-        coroutineScope.launch {
-            val cameraProvider = suspendCoroutine<ProcessCameraProvider> { continuation ->
-                ProcessCameraProvider.getInstance(context).also { future ->
-                    future.addListener({
-                        continuation.resume(future.get())
-                    }, ContextCompat.getMainExecutor(context))
-                }
-            }
-
-            runCatching {
-                cameraProvider.unbindAll()
-                cameraProvider.bindToLifecycle(
-                    lifecycleOwner, cameraSelector,
-                    previewUseCase,
-                    imageCapture
-                )
-            }
+        runCatching {
+            cameraProvider.unbindAll()
+            cameraProvider.bindToLifecycle(
+                lifecycleOwner, cameraSelector,
+                previewUseCase,
+                imageCapture
+            )
         }
+    }
 
-        return@AndroidView previewView
-    })
+    AndroidView(modifier = modifier, factory = { previewView })
+
 }
 
 @Composable
@@ -140,20 +147,30 @@ private fun CameraControls(
 
     Row(
         modifier = modifier
-            .background(Color.Black)
             .padding(16.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
+        horizontalArrangement = Arrangement.SpaceEvenly,
+        verticalAlignment = Alignment.Bottom
     ) {
 
-        Spacer(modifier = Modifier.weight(1f))
+        Spacer(modifier = Modifier.size(48.dp))
+
         Box(
             modifier = Modifier
                 .size(48.dp)
+                .border(width = 2.dp, color = Color.DarkGray, shape = CircleShape)
                 .background(Color.White, CircleShape)
                 .clickable { onCameraAction.invoke(CameraAction.Click) }
         )
-        Spacer(modifier = Modifier.weight(1f))
+
+        Image(
+            painter = painterResource(id = R.drawable.ic_switch_camera),
+            contentDescription = null,
+            modifier = Modifier
+                .size(36.dp)
+                .clickable { onCameraAction.invoke(CameraAction.SwitchCamera) }
+                .clipToBounds(),
+            contentScale = ContentScale.Fit
+        )
 
     }
 
