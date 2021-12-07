@@ -3,7 +3,6 @@ package `in`.surajsau.jisho.ui.digitalink
 import `in`.surajsau.jisho.base.SingleFlowViewModel
 import `in`.surajsau.jisho.data.DigitalInkProvider
 import `in`.surajsau.jisho.data.TranslatorProvider
-import `in`.surajsau.jisho.domain.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.compositionLocalOf
 import androidx.lifecycle.ViewModel

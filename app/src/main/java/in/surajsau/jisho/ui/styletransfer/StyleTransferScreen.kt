@@ -73,9 +73,18 @@ fun StyleTransferScreen(
 
                 is StyleTransferViewModel.ScreenMode.StylePreview -> {
                     StylePreviewScreen(
-                        image = screenMode.image,
-                        previews = screenMode.stylePreviews,
-                        onStyleSelected = { fileName -> event(StyleTransferViewModel.Event.StyleSelected(fileName)) },
+                        modifier = Modifier.fillMaxSize(),
+                        imagePreview = {
+                            ImagePreview(bitmap = screenMode.image, showLoader = screenMode.showLoading)
+                        },
+                        previewGallery = {
+                            PreviewGallery(
+                                previews = screenMode.stylePreviews,
+                                onStyleSelected = { fileName ->
+                                    event(StyleTransferViewModel.Event.StyleSelected(fileName))
+                                }
+                            )
+                        }
                     )
                 }
             }
@@ -87,11 +96,9 @@ fun StyleTransferScreen(
 
 @Composable
 fun StylePreviewScreen(
-    image: Bitmap,
-    previews: List<String>,
+    imagePreview: @Composable () -> Unit,
+    previewGallery: @Composable () -> Unit,
     modifier: Modifier = Modifier,
-    showLoader: Boolean = false,
-    onStyleSelected: (String) -> Unit,
 ) {
 
     Column(modifier = modifier) {
@@ -100,44 +107,69 @@ fun StylePreviewScreen(
             .fillMaxWidth()
             .weight(1f)
         ) {
-            Image(
-                bitmap = image.asImageBitmap(),
-                contentDescription = null,
-                modifier = Modifier.fillMaxSize()
-            )
-
-            if (showLoader) {
-                Box(modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color.Black)
-                    .alpha(0.5f)
-                )
-                CircularProgressIndicator()
-            }
+            imagePreview()
         }
 
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
-        ) {
-            items(previews) { fileName ->
-                StylePreviewImage(
-                    fileName = fileName,
-                    onClick = { onStyleSelected.invoke(it) },
-                    modifier = Modifier
-                        .width(96.dp)
-                        .height(256.dp)
-                        .padding(start = 8.dp)
-                )
-            }
-        }
+        previewGallery()
     }
 
 }
 
 @Composable
-fun StylePreviewImage(
+fun ImagePreview(
+    bitmap: Bitmap?,
+    modifier: Modifier = Modifier,
+    showLoader: Boolean = false,
+) {
+
+    Box(modifier = modifier) {
+        if (bitmap != null) {
+            Image(
+                bitmap = bitmap.asImageBitmap(),
+                contentDescription = null,
+                modifier = Modifier.fillMaxSize()
+            )
+        }
+
+        if (showLoader) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black)
+                    .alpha(0.5f)
+            )
+            CircularProgressIndicator()
+        }
+    }
+}
+
+@Composable
+fun PreviewGallery(
+    previews: List<String>,
+    modifier: Modifier = Modifier,
+    onStyleSelected: (String) -> Unit
+) {
+
+    LazyColumn(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(16.dp)
+    ) {
+        items(previews) { fileName ->
+            PreviewGalleryItem(
+                fileName = fileName,
+                onClick = { onStyleSelected.invoke(it) },
+                modifier = Modifier
+                    .width(96.dp)
+                    .height(256.dp)
+                    .padding(start = 8.dp)
+            )
+        }
+    }
+}
+
+@Composable
+fun PreviewGalleryItem(
     fileName: String,
     onClick: (String) -> Unit,
     modifier: Modifier = Modifier

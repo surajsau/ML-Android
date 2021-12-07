@@ -44,7 +44,8 @@ fun HomeScreen(
 
                 ScreenCard(
                     screen = screen,
-                    onClick = { navigateToDestination.invoke(it) }
+                    onClick = { navigateToDestination.invoke(it) },
+                    modifier = Modifier.padding(top = 16.dp)
                 )
             }
         }

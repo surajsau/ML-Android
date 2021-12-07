@@ -9,6 +9,7 @@ import androidx.camera.view.PreviewView
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -45,14 +46,17 @@ fun CameraScreen(
 
     var cameraSelector by remember { mutableStateOf(CameraSelector.DEFAULT_BACK_CAMERA) }
 
-    Box(modifier = modifier) {
+    Column(modifier = modifier) {
 
         Camera(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f),
             imageCapture = imageCapture,
         )
 
         CameraControls(
+            modifier = Modifier.fillMaxWidth(),
             onCameraAction = {
                 when (it) {
                     is CameraAction.Click -> {
@@ -142,10 +146,14 @@ private fun CameraControls(
         verticalAlignment = Alignment.CenterVertically
     ) {
 
+        Spacer(modifier = Modifier.weight(1f))
         Box(
-            modifier = Modifier.size(64.dp).background(Color.White)
+            modifier = Modifier
+                .size(48.dp)
+                .background(Color.White, CircleShape)
                 .clickable { onCameraAction.invoke(CameraAction.Click) }
         )
+        Spacer(modifier = Modifier.weight(1f))
 
     }
 

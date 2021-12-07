@@ -1,7 +1,8 @@
 package `in`.surajsau.jisho.ui.styletransfer
 
+import `in`.surajsau.jisho.base.FileName
 import `in`.surajsau.jisho.base.SingleFlowViewModel
-import `in`.surajsau.jisho.data.StyleCacheStatus
+import `in`.surajsau.jisho.data.FileProvider
 import `in`.surajsau.jisho.data.StyleTransferProvider
 import android.graphics.Bitmap
 import androidx.compose.runtime.compositionLocalOf
@@ -9,41 +10,41 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class StyleTransferViewModelImpl @Inject constructor(
     private val styleTransferProvider: StyleTransferProvider,
+    private val fileProvider: FileProvider,
 ) : ViewModel(), StyleTransferViewModel {
 
-    private val _cameraImage = MutableStateFlow<String>("")
-    private val _styleImage = MutableStateFlow<String>("")
+    private val _cameraImageFileName = MutableStateFlow<FileName?>(null)
+    private val _styleImageFileName = MutableStateFlow<FileName?>(null)
 
-    private val _cacheStatus = MutableStateFlow<StyleCacheStatus>(StyleCacheStatus.Checking)
+    private val _isImageCaptured = MutableStateFlow(false)
 
-    private val _isImageCaptured: Flow<Boolean>
-        get() = _cameraImage.map { it.isNotEmpty() }
+    private val _cameraImage = _cameraImageFileName.filterNotNull().flatMapLatest { fileProvider.fetchBitmap(it.value) }
+    private val _styleImage = _styleImageFileName.filterNotNull().flatMapLatest { fileProvider.fetchAssetBitmap(it.value) }
 
-    private val _styleTransferredImage = combine(
-        _cameraImage.filter { it.isNotEmpty() },
-        _styleImage.filter { it.isNotEmpty() },
-        transform = { cameraImage, styleImage -> Pair(cameraImage, styleImage) }
-    ).flatMapLatest { (targetPath, stylePath) ->
-        styleTransferProvider.process(targetPath, stylePath)
-    }
+    private val _styleTransferState = combine(
+        _cameraImage,
+        _styleImage
+    ) { cameraIamge, styleImage -> Pair(cameraIamge, styleImage) }
+        .flatMapLatest { (targetImage, styleImage) -> styleTransferProvider.process(targetImage, styleImage) }
+        .stateIn(viewModelScope, SharingStarted.Lazily, StyleTransferProvider.StyleTransferState.Idle)
 
     override val state: StateFlow<StyleTransferViewModel.State>
         get() = combine(
-            _cacheStatus,
-            _styleTransferredImage,
+            _styleTransferState,
             _isImageCaptured
-        ){ cacheStatus, outputImage, isImagedCaptured ->
+        ){ styleTransferState, isImagedCaptured ->
             val mode = if (!isImagedCaptured) {
                 StyleTransferViewModel.ScreenMode.Camera
             } else {
                 StyleTransferViewModel.ScreenMode.StylePreview(
-                    showLoading = cacheStatus == StyleCacheStatus.Checking,
-                    image = outputImage,
+                    showLoading = styleTransferState !is StyleTransferProvider.StyleTransferState.Finished,
+                    image = (styleTransferState as? StyleTransferProvider.StyleTransferState.Finished)?.image,
                     stylePreviews = StyleTransferProvider.Styles
                 )
             }
@@ -53,16 +54,17 @@ class StyleTransferViewModelImpl @Inject constructor(
         .stateIn(viewModelScope, SharingStarted.Eagerly, StyleTransferViewModel.State())
 
     override fun onEvent(event: StyleTransferViewModel.Event) {
-        when(event) {
-            is StyleTransferViewModel.Event.CameraResultReceived -> {
-                styleTransferProvider.checkStylesCacheStatus()
-                    .onEach { _cacheStatus.value = it }
-                    .launchIn(viewModelScope)
-                _cameraImage.value = event.fileName
-            }
-            is StyleTransferViewModel.Event.StyleSelected -> _styleImage.value = event.fileName
+        viewModelScope.launch {
+            when (event) {
+                is StyleTransferViewModel.Event.CameraResultReceived -> {
+                    _isImageCaptured.value = true
+                    _cameraImageFileName.value = FileName(event.fileName)
+                }
 
-            is StyleTransferViewModel.Event.OnStop -> styleTransferProvider.close()
+                is StyleTransferViewModel.Event.StyleSelected -> { _styleImageFileName.value = FileName(event.fileName) }
+
+                is StyleTransferViewModel.Event.OnStop -> {}
+            }
         }
     }
 
@@ -75,7 +77,7 @@ interface StyleTransferViewModel: SingleFlowViewModel<StyleTransferViewModel.Eve
 
         data class StylePreview(
             val showLoading: Boolean,
-            val image: Bitmap,
+            val image: Bitmap?,
             val stylePreviews: List<String>
         ): ScreenMode()
     }
