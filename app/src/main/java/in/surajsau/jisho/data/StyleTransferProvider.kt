@@ -50,6 +50,6 @@ interface StyleTransferProvider {
         const val StyleImageSize = 256
         const val ContentImageSize = 384
 
-        val Styles = (0..25).map { "style$it.jpg" }
+        val Styles = (0..5).map { "style$it.jpg" }
     }
 }
