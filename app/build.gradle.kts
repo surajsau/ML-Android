@@ -14,7 +14,7 @@ android {
     defaultConfig {
         applicationId = "in.surajsau.jisho"
         minSdk = 21
-        targetSdk = 30
+        targetSdk = 31
         versionCode = 1
         versionName = "1.0"
 
@@ -56,6 +56,11 @@ dependencies {
     implementation(Dep.AndroidX.AppCompat)
     implementation(Dep.AndroidX.Material)
     implementation(Dep.AndroidX.Lifeycycle)
+
+    // Temporary Fix For apps targeting Android S+, add the following
+    constraints {
+        implementation("androidx.work:work-runtime:2.7.0-alpha04")
+    }
 
     implementation(Dep.Compose.Ui)
     implementation(Dep.Compose.Material)
