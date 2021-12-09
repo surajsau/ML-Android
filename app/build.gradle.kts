@@ -4,6 +4,7 @@ plugins {
     id("com.android.application")
     id("dagger.hilt.android.plugin")
     id("kotlin-android")
+    id("kotlin-android-extensions")
     id("kotlin-kapt")
 }
 
@@ -37,6 +38,7 @@ android {
     }
     buildFeatures {
         compose = true
+        mlModelBinding = true
     }
     composeOptions {
         kotlinCompilerExtensionVersion = "1.0.4"
@@ -55,6 +57,11 @@ dependencies {
     implementation(Dep.AndroidX.Material)
     implementation(Dep.AndroidX.Lifeycycle)
 
+    // Temporary Fix For apps targeting Android S+, add the following
+    constraints {
+        implementation("androidx.work:work-runtime:2.7.0-alpha04")
+    }
+
     implementation(Dep.Compose.Ui)
     implementation(Dep.Compose.Material)
     implementation(Dep.Compose.Tooling)
@@ -63,7 +70,16 @@ dependencies {
     implementation(Dep.Compose.Activity)
     implementation(Dep.Compose.Navigation)
 
+    implementation(Dep.CameraX.Core)
+    implementation(Dep.CameraX.Lifecycle)
+    implementation(Dep.CameraX.View)
+
+    implementation(Dep.Accompanist.SwipeRefresh)
+    implementation(Dep.Accompanist.Permissions)
+
     implementation(Dep.Hilt.Core)
+    implementation(Dep.TensorFlow.Support)
+    implementation(Dep.TensorFlow.MetaData)
     kapt(Dep.Hilt.Compiler)
     implementation(Dep.Hilt.Compose)
     implementation(Dep.Hilt.ViewModel)
@@ -71,6 +87,9 @@ dependencies {
 
     implementation(Dep.MLKit.DigitalInk)
     implementation(Dep.MLKit.Translation)
+
+    implementation(Dep.Coil.Compose)
+    implementation(Dep.Coil.Gif)
 
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.3")
