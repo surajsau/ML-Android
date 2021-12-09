@@ -1,5 +1,7 @@
 package `in`.surajsau.jisho.data
 
+import `in`.surajsau.jisho.ml.MagentaStylePredictor
+import `in`.surajsau.jisho.ml.MagentaStyleTransfer
 import `in`.surajsau.jisho.ml.StylePredictorModel
 import `in`.surajsau.jisho.ml.StyleTransferModel
 import android.content.Context
@@ -16,8 +18,8 @@ class StyleTransferProviderImpl @Inject constructor(
     private val context: Context,
 ): StyleTransferProvider {
 
-    private val stylePredictorModel = StylePredictorModel.newInstance(context)
-    private val styleTransferModel = StyleTransferModel.newInstance(context)
+    private val stylePredictorModel = MagentaStylePredictor.newInstance(context)
+    private val styleTransferModel = MagentaStyleTransfer.newInstance(context)
 
     override fun process(targetImage: Bitmap, styleImage: Bitmap): Flow<StyleTransferProvider.StyleTransferState> = flow {
         emit(StyleTransferProvider.StyleTransferState.Started)
