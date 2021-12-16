@@ -1,1 +1,4 @@
 /build
+
+# tflite
+*.tflite
