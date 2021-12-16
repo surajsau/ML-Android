@@ -1,4 +1,4 @@
 /build
 
 # tflite
-*.tflite
+/src/main/assets/gpt/
