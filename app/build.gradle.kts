@@ -13,7 +13,7 @@ android {
 
     defaultConfig {
         applicationId = "in.surajsau.jisho"
-        minSdk = 21
+        minSdk = 24
         targetSdk = 31
         versionCode = 1
         versionName = "1.0"
@@ -87,6 +87,9 @@ dependencies {
 
     implementation(Dep.MLKit.DigitalInk)
     implementation(Dep.MLKit.Translation)
+
+    implementation(Dep.Retrofit.Core)
+    implementation(Dep.Retrofit.GsonConverter)
 
     implementation(Dep.Coil.Compose)
     implementation(Dep.Coil.Gif)

@@ -5,6 +5,9 @@ import `in`.surajsau.jisho.base.LocalBitmapCache
 import `in`.surajsau.jisho.ui.digitalink.DigitalInkScreen
 import `in`.surajsau.jisho.ui.digitalink.DigitalInkViewModelImpl
 import `in`.surajsau.jisho.ui.digitalink.LocalDigitalInkViewModel
+import `in`.surajsau.jisho.ui.gpt.ChatSuggestionScreen
+import `in`.surajsau.jisho.ui.gpt.ChatSuggestionViewModelImpl
+import `in`.surajsau.jisho.ui.gpt.LocalChatSuggestionViewModel
 import `in`.surajsau.jisho.ui.home.HomeScreen
 import `in`.surajsau.jisho.ui.home.HomeViewModelImpl
 import `in`.surajsau.jisho.ui.home.LocalHomeViewModel
@@ -64,6 +67,15 @@ fun MLApp(
                             modifier = Modifier.fillMaxSize(),
                             navigateBack = { navController.popBackStack() },
                             navigateToSettings = navigateToSettings
+                        )
+                    }
+                }
+                composable(route = Destinations.Gpt.value) {
+                    CompositionLocalProvider(
+                        LocalChatSuggestionViewModel provides hiltViewModel<ChatSuggestionViewModelImpl>()
+                    ) {
+                        ChatSuggestionScreen(
+                            modifier = Modifier.fillMaxSize()
                         )
                     }
                 }

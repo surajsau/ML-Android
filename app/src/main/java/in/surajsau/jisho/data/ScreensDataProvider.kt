@@ -24,7 +24,15 @@ class ScreensDataProviderImpl @Inject constructor(): ScreensDataProvider {
                     title = "Style Transfer",
                     description = "Character Recognition & Translation using Google MLKit",
                     tags = listOf("MLKit")
-                )
+                ),
+
+                Screen(
+                    destinations = Destinations.Gpt,
+                    previewImage = "",
+                    title = "Text Suggestion using GPT",
+                    description = "Using Huggingface/Transformers GPT model for text completion",
+                    tags = listOf("MLKit")
+                ),
             )
         )
     }
