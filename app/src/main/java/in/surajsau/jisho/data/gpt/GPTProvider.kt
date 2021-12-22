@@ -3,6 +3,7 @@ package `in`.surajsau.jisho.data.gpt
 import `in`.surajsau.jisho.base.reverseMap
 import `in`.surajsau.jisho.data.FileProvider
 import `in`.surajsau.jisho.ui.digitalink.MLKitModelStatus
+import android.util.Log
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.cancel
@@ -28,6 +29,8 @@ class GPTProviderImpl @Inject constructor(
 
     private lateinit var tokenizer: GPTTokenizer
 
+    override val suggestion: Channel<String> = Channel()
+
     override fun loadModel(): Flow<MLKitModelStatus> = flow {
         emit(MLKitModelStatus.CheckingDownload)
 
@@ -37,51 +40,46 @@ class GPTProviderImpl @Inject constructor(
 
         this@GPTProviderImpl.tokenizer = GPTTokenizer(encoder, decoder, bpeTokens)
 
-        this@GPTProviderImpl.interpreter = fileProvider.fetchInterpreter("gpt/gpt2.tflite")
+        this@GPTProviderImpl.interpreter = fileProvider.fetchInterpreter("gpt/model.tflite")
         emit(MLKitModelStatus.Downloaded)
     }
 
-    override fun generate(text: String, maxLength: Int): Flow<String> = flow {
-        val tokens = tokenizer.tokenize(text).toMutableList()
+    override suspend fun generate(text: String, maxLength: Int) {
+        val tokens = tokenizer.tokenize(text)
+        var result = ""
 
-        repeat(maxLength) {
-            val maxTokens = tokens.takeLast(SequenceLength).toIntArray()
-
-            // ensuring maxTokens if of SequenceLength size
+        repeat (maxLength) {
+            val maxTokens    = tokens.takeLast(SequenceLength).toIntArray()
             val paddedTokens = maxTokens + IntArray(SequenceLength - maxTokens.size)
+            val inputIds     = Array(1) { paddedTokens }
 
-            // input: [1][SequenceLength]
-            val inputIds = Array(1){ paddedTokens }
-
-            // output: [1][SequenceLength][VocabSize]
             val predictions = Array(1) { Array(SequenceLength) { FloatArray(VocabSize) } }
-
             val outputs = mutableMapOf<Int, Any>(0 to predictions)
 
             interpreter.runForMultipleInputsOutputs(arrayOf(inputIds), outputs)
+            val outputLogits = predictions[0][maxTokens.size-1]
 
-            val outputLogits = predictions[0][maxTokens.size - 1]
-
-            val filteredLogitsWithIndices = outputLogits
-                .mapIndexed { index, logit -> (index to logit) }
+            val filteredLogitsWithIndexes = outputLogits
+                .mapIndexed { index, fl -> (index to fl) }
                 .sortedByDescending { it.second }
                 .take(40)
 
-            val filteredLogits = filteredLogitsWithIndices.map { it.second }
+            // Softmax computation on filtered logits
+            val filteredLogits = filteredLogitsWithIndexes.map { it.second }
+            val maxLogitValue  = filteredLogits.maxOrNull()!!
+            val logitsExp      = filteredLogits.map { exp(it - maxLogitValue) }
+            val sumExp         = logitsExp.sum()
+            val probs          = logitsExp.map { it.div(sumExp) }
 
-            val maxLogitValue = filteredLogits.maxOrNull()!!
-            val logitsExp = filteredLogits.map { exp(it - maxLogitValue) }
-            val sumOfLogitsExp = logitsExp.sum()
-            val probabilities = logitsExp.map { it.div(sumOfLogitsExp) }
-
-            val logitIndices = filteredLogitsWithIndices.map { it.first }
-            val nextToken = sample(logitIndices, probabilities)
+            val logitsIndexes = filteredLogitsWithIndexes.map { it.first }
+            val nextToken = sample(logitsIndexes, probs)
 
             tokens.add(nextToken)
             val decodedToken = tokenizer.convertToString(listOf(nextToken))
-
-            emit(decodedToken)
+            result += decodedToken
         }
+
+        suggestion.trySend(result)
     }
 
     private fun randomIndex(probabilities: List<Float>): Int {
@@ -111,6 +109,8 @@ class GPTProviderImpl @Inject constructor(
 
 interface GPTProvider {
 
+    val suggestion: Channel<String>
+
     fun loadModel(): Flow<MLKitModelStatus>
-    fun generate(text: String, maxLength: Int = 100): Flow<String>
+    suspend fun generate(text: String, maxLength: Int = 100)
 }

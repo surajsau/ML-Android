@@ -32,8 +32,8 @@ fun ChatSuggestionScreen(modifier: Modifier = Modifier) {
 
         Box(
             modifier = Modifier
-            .fillMaxWidth()
-            .weight(1f)
+                .fillMaxWidth()
+                .weight(1f)
         ) {
             ChatBlock(
                 messages = state.messages,
@@ -59,9 +59,7 @@ fun ChatSuggestionScreen(modifier: Modifier = Modifier) {
             text = state.currentMessage,
             onMessageTextChanged = { event(ChatSuggestionViewModel.Event.TextChange(it)) },
             onSendClicked = { event(ChatSuggestionViewModel.Event.SendMessage) },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(72.dp),
+            modifier = Modifier.fillMaxWidth(),
             isSendButtonEnabled = state.isSendButtonEnabled
         )
     }
@@ -76,17 +74,21 @@ fun SuggestionBlock(
 
     Box(modifier = modifier.background(Color.LightGray)) {
 
-        Text(
-            text = suggestionText,
-            fontSize = 12.sp,
-            modifier = Modifier
-                .align(Alignment.Center)
-                .clickable { onSuggestionClicked.invoke(suggestionText) }
-                .height(24.dp)
-                .padding(4.dp)
-                .background(Color.DarkGray, RoundedCornerShape(12.dp)),
-            color = Color.White,
-        )
+        Box(modifier = Modifier
+            .height(24.dp)
+            .align(Alignment.Center)
+            .padding(vertical = 4.dp)
+            .background(Color.DarkGray, RoundedCornerShape(12.dp))
+        ) {
+            Text(
+                text = suggestionText,
+                fontSize = 12.sp,
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .clickable { onSuggestionClicked.invoke(suggestionText) },
+                color = Color.White,
+            )
+        }
     }
 }
 
@@ -110,17 +112,14 @@ fun MessageBlock(
         TextField(
             value = text,
             onValueChange = { onMessageTextChanged.invoke(it) },
-            modifier = Modifier
-                .fillMaxHeight()
-                .weight(1f)
-                .padding(horizontal = 16.dp, vertical = 8.dp),
+            modifier = Modifier.weight(1f)
+                .padding(8.dp),
             placeholder = { Text(text = "Enter your message") },
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
             keyboardActions = KeyboardActions(onDone = { keyboardController?.hide() })
         )
 
         IconButton(
-            modifier = Modifier.fillMaxHeight(),
             onClick = {
                 onSendClicked.invoke()
                 keyboardController?.hide()

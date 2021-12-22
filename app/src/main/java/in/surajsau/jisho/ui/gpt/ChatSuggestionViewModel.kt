@@ -5,12 +5,14 @@ import `in`.surajsau.jisho.data.chat.ChatProvider
 import `in`.surajsau.jisho.data.gpt.GPTProvider
 import `in`.surajsau.jisho.data.model.ChatMessage
 import `in`.surajsau.jisho.ui.digitalink.MLKitModelStatus
+import android.util.Log
 import androidx.compose.runtime.compositionLocalOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -33,6 +35,10 @@ class ChatSuggestionViewModelImpl @Inject constructor(
                         else
                             add(existingMessageIndex, message)
                     }
+
+                    if (message is ChatMessage.Message && !message.isMe) {
+                        gptProvider.generate(text = message.text, maxLength = 10)
+                    }
                 }
                 .flowOn(Dispatchers.IO)
                 .collect()
@@ -40,17 +46,17 @@ class ChatSuggestionViewModelImpl @Inject constructor(
     }
 
     private val _gptModelStatus = gptProvider.loadModel()
+        .flowOn(Dispatchers.IO)
         .stateIn(viewModelScope, SharingStarted.Lazily, MLKitModelStatus.CheckingDownload)
-
-    private var predictionJob: Job? = null
 
     private val _messages = MutableStateFlow(emptyList<ChatMessage>())
 
-    private val _showSuggestion = MutableStateFlow(false)
-
     private val _currentMessage = MutableStateFlow("")
 
-    private val _textSuggestion = MutableStateFlow("")
+    private val _textSuggestion = gptProvider.suggestion
+        .receiveAsFlow()
+        .flowOn(Dispatchers.IO)
+        .stateIn(viewModelScope, SharingStarted.Lazily, "")
 
     override val state: StateFlow<ChatSuggestionViewModel.State>
         get() = combine(
@@ -58,13 +64,13 @@ class ChatSuggestionViewModelImpl @Inject constructor(
             _messages,
             _currentMessage,
             _textSuggestion,
-            _showSuggestion
-        ) { modelStatus, messages, currentMessage, textSuggestion, showSuggestion ->
+        ) { modelStatus, messages, currentMessage, textSuggestion ->
             val isModelReady = modelStatus == MLKitModelStatus.Downloaded
+            val showSuggestion = textSuggestion.isNotEmpty()
 
             ChatSuggestionViewModel.State(
                 showLoader = !isModelReady,
-                isSendButtonEnabled = !isModelReady,
+                isSendButtonEnabled = true,
                 messages = messages,
                 currentMessage = currentMessage,
                 textSuggestion = textSuggestion,
@@ -89,21 +95,6 @@ class ChatSuggestionViewModelImpl @Inject constructor(
             }
 
             is ChatSuggestionViewModel.Event.TextChange -> {
-                val text = event.text
-
-                if (text.split(" ").size >= 3) {
-                    predictionJob?.cancel()
-
-                    predictionJob = viewModelScope.launch {
-                        gptProvider.generate(text = text, maxLength = 20)
-                            .flowOn(Dispatchers.IO)
-                            .collect { suggestionText ->
-                                _showSuggestion.value = suggestionText.isNotEmpty()
-                                _textSuggestion.value = suggestionText
-                            }
-                    }
-                }
-
                 _currentMessage.value = event.text
             }
         }

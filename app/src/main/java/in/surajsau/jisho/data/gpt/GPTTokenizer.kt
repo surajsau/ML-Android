@@ -9,55 +9,52 @@ class GPTTokenizer (
 ) {
     private val encoderRegex = Regex(""""'s|'t|'re|'ve|'m|'ll|'d| ?\p{L}+| ?\p{N}+| ?[^\s\p{L}\p{N}]+|\s+(?!\S)|\s+""")
 
-    fun tokenize(text: String): List<Int> {
-        val tokens = encoderRegex.findAll(text)
-            .map { result -> result.value
-                .codePoints()
+    fun tokenize(text: String): MutableList<Int> {
+        val tokens = encoderRegex.findAll(text).map { result ->
+            result.value.codePoints()
                 .boxed()
-                .map { ByteEncoder[it] }
+                .map { ByteEncoder[it]!! }
                 .toArray()
                 .joinToString("")
-            }
+        }
 
         return tokens
             .map { bpe(it) }
             .flatten()
             .map { encodingMap[it]!! }
-            .toList()
+            .toMutableList()
     }
 
     fun convertToString(tokens: List<Int>): String {
-        val text = tokens.joinToString { this.decodingMap.getOrDefault(it, "") }
-        val utfCodePoints = text.map { ByteDecoder[it.toString()]!! }
-
-        return String(utfCodePoints.toIntArray(), 0, utfCodePoints.size)
+        val text = tokens.joinToString("") { decodingMap.getOrDefault(it, "") }
+        val utfCodepoints = text.map { ByteDecoder[it.toString()]!! }
+        return String(utfCodepoints.toIntArray(), 0, utfCodepoints.size)
     }
 
     private fun bpe(token: String): List<String> {
-        if (token.isEmpty() or (token.length == 1))
-            return listOf(token)
+        if (token.length <= 1) return listOf(token)
 
         var word = token.map { it.toString() }
         var pairs = getPairs(word)
 
-        while(true) {
+        while (true) {
             if (!pairs.any { bpeTokens.containsKey(it) }) break
-
             val (first, second) = pairs.minByOrNull { bpeTokens.getOrDefault(it, Int.MAX_VALUE) } ?: break
 
             var i = 0
-
             val newWord = mutableListOf<String>()
-
             while (i < word.size) {
                 val j = word.withIndex().indexOfFirst { it.index >= i && it.value == first }
-                if (j != -1)
+                if (j != -1) {
                     newWord.addAll(word.subList(i, j))
-                else
-                    newWord.addAll(word.subListFrom(i))
+                    i = j
+                } else {
+                    newWord.addAll(word.subList(i, word.size))
+                    break
+                }
 
-                if (word[i] == first && i < (word.size - 1) && word[i + 1] == second) {
-                    newWord.add(first + second)
+                if (word[i] == first && i < word.size-1 && word[i+1] == second) {
+                    newWord.add(first+second)
                     i += 2
                 } else {
                     newWord.add(word[i])
@@ -66,10 +63,11 @@ class GPTTokenizer (
             }
 
             word = newWord
-            if (word.size == 1)
+            if (word.size == 1) {
                 break
-
-            pairs = getPairs(word)
+            } else {
+                pairs = getPairs(word)
+            }
         }
 
         return word
