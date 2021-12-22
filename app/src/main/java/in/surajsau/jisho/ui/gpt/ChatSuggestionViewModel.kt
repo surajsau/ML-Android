@@ -4,15 +4,13 @@ import `in`.surajsau.jisho.base.SingleFlowViewModel
 import `in`.surajsau.jisho.data.chat.ChatProvider
 import `in`.surajsau.jisho.data.gpt.GPTProvider
 import `in`.surajsau.jisho.data.model.ChatMessage
+import `in`.surajsau.jisho.data.model.Suggestion
 import `in`.surajsau.jisho.ui.digitalink.MLKitModelStatus
-import android.util.Log
 import androidx.compose.runtime.compositionLocalOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -37,7 +35,11 @@ class ChatSuggestionViewModelImpl @Inject constructor(
                     }
 
                     if (message is ChatMessage.Message && !message.isMe) {
-                        gptProvider.generate(text = message.text, maxLength = 10)
+                        val text = message.text.apply {
+                            if (!this.contains("."))
+                                this.plus(".")
+                        }
+                        gptProvider.generate(text = text, maxLength = 10)
                     }
                 }
                 .flowOn(Dispatchers.IO)
@@ -49,12 +51,15 @@ class ChatSuggestionViewModelImpl @Inject constructor(
         .flowOn(Dispatchers.IO)
         .stateIn(viewModelScope, SharingStarted.Lazily, MLKitModelStatus.CheckingDownload)
 
+    private val _showSuggestionBlock = MutableStateFlow(false)
+
     private val _messages = MutableStateFlow(emptyList<ChatMessage>())
 
     private val _currentMessage = MutableStateFlow("")
 
-    private val _textSuggestion = gptProvider.suggestion
+    private val _suggestion = gptProvider.suggestion
         .receiveAsFlow()
+        .onEach { _showSuggestionBlock.value = true }
         .flowOn(Dispatchers.IO)
         .stateIn(viewModelScope, SharingStarted.Lazily, "")
 
@@ -63,10 +68,12 @@ class ChatSuggestionViewModelImpl @Inject constructor(
             _gptModelStatus,
             _messages,
             _currentMessage,
-            _textSuggestion,
-        ) { modelStatus, messages, currentMessage, textSuggestion ->
+            _suggestion,
+            _showSuggestionBlock,
+        ) { modelStatus, messages, currentMessage, suggestion, showSuggestionBlock ->
             val isModelReady = modelStatus == MLKitModelStatus.Downloaded
-            val showSuggestion = textSuggestion.isNotEmpty()
+            val textSuggestion = (suggestion as? Suggestion.Message)?.value ?: ""
+            val showSuggestionLoader = suggestion is Suggestion.Interpreting
 
             ChatSuggestionViewModel.State(
                 showLoader = !isModelReady,
@@ -74,7 +81,8 @@ class ChatSuggestionViewModelImpl @Inject constructor(
                 messages = messages,
                 currentMessage = currentMessage,
                 textSuggestion = textSuggestion,
-                showSuggestion = showSuggestion,
+                showSuggestionBlock = showSuggestionBlock,
+                showSuggestionLoader = showSuggestionLoader,
             )
         }.stateIn(viewModelScope, SharingStarted.Eagerly, ChatSuggestionViewModel.State())
 
@@ -91,6 +99,7 @@ class ChatSuggestionViewModelImpl @Inject constructor(
             }
 
             is ChatSuggestionViewModel.Event.AcceptSuggestion -> {
+                _showSuggestionBlock.value = false
                 _currentMessage.value = _currentMessage.value.plus(event.suggestion)
             }
 
@@ -115,7 +124,8 @@ interface ChatSuggestionViewModel : SingleFlowViewModel<ChatSuggestionViewModel.
         val isSendButtonEnabled: Boolean = false,
         val currentMessage: String = "",
         val messages: List<ChatMessage> = emptyList(),
-        val showSuggestion: Boolean = false,
+        val showSuggestionBlock: Boolean = false,
+        val showSuggestionLoader: Boolean = false,
         val textSuggestion: String = ""
     )
 }

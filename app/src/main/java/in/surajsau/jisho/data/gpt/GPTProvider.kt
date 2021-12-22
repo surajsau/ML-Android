@@ -2,6 +2,7 @@ package `in`.surajsau.jisho.data.gpt
 
 import `in`.surajsau.jisho.base.reverseMap
 import `in`.surajsau.jisho.data.FileProvider
+import `in`.surajsau.jisho.data.model.Suggestion
 import `in`.surajsau.jisho.ui.digitalink.MLKitModelStatus
 import android.util.Log
 import kotlinx.coroutines.channels.Channel
@@ -29,7 +30,7 @@ class GPTProviderImpl @Inject constructor(
 
     private lateinit var tokenizer: GPTTokenizer
 
-    override val suggestion: Channel<String> = Channel()
+    override val suggestion: Channel<Suggestion> = Channel()
 
     override fun loadModel(): Flow<MLKitModelStatus> = flow {
         emit(MLKitModelStatus.CheckingDownload)
@@ -45,10 +46,11 @@ class GPTProviderImpl @Inject constructor(
     }
 
     override suspend fun generate(text: String, maxLength: Int) {
+        suggestion.trySend(Suggestion.Interpreting)
         val tokens = tokenizer.tokenize(text)
         var result = ""
 
-        repeat (maxLength) {
+        repeat(maxLength) {
             val maxTokens    = tokens.takeLast(SequenceLength).toIntArray()
             val paddedTokens = maxTokens + IntArray(SequenceLength - maxTokens.size)
             val inputIds     = Array(1) { paddedTokens }
@@ -79,7 +81,7 @@ class GPTProviderImpl @Inject constructor(
             result += decodedToken
         }
 
-        suggestion.trySend(result)
+        suggestion.trySend(Suggestion.Message(result.replace("\n", " ")))
     }
 
     private fun randomIndex(probabilities: List<Float>): Int {
@@ -109,7 +111,7 @@ class GPTProviderImpl @Inject constructor(
 
 interface GPTProvider {
 
-    val suggestion: Channel<String>
+    val suggestion: Channel<Suggestion>
 
     fun loadModel(): Flow<MLKitModelStatus>
     suspend fun generate(text: String, maxLength: Int = 100)

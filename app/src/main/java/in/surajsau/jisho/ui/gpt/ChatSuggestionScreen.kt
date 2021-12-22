@@ -1,5 +1,6 @@
 package `in`.surajsau.jisho.ui.gpt
 
+import `in`.surajsau.jisho.R
 import `in`.surajsau.jisho.base.use
 import `in`.surajsau.jisho.data.model.ChatMessage
 import androidx.compose.foundation.background
@@ -19,6 +20,7 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -47,11 +49,12 @@ fun ChatSuggestionScreen(modifier: Modifier = Modifier) {
             }
         }
 
-        if (state.showSuggestion) {
+        if (state.showSuggestionBlock) {
             SuggestionBlock(
                 suggestionText = state.textSuggestion,
                 onSuggestionClicked = { event(ChatSuggestionViewModel.Event.AcceptSuggestion(it)) },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                showProgress = state.showSuggestionLoader
             )
         }
 
@@ -70,24 +73,36 @@ fun SuggestionBlock(
     suggestionText: String,
     onSuggestionClicked: (String) -> Unit,
     modifier: Modifier = Modifier,
+    showProgress: Boolean = false,
 ) {
 
     Box(modifier = modifier.background(Color.LightGray)) {
 
-        Box(modifier = Modifier
-            .height(24.dp)
-            .align(Alignment.Center)
-            .padding(vertical = 4.dp)
-            .background(Color.DarkGray, RoundedCornerShape(12.dp))
-        ) {
-            Text(
-                text = suggestionText,
-                fontSize = 12.sp,
+        if (showProgress) {
+            CircularProgressIndicator(
+                modifier = Modifier
+                    .size(24.dp)
+                    .padding(4.dp)
+                    .align(Alignment.Center),
+                strokeWidth = 2.dp
+            )
+        } else {
+            Box(
                 modifier = Modifier
                     .align(Alignment.Center)
-                    .clickable { onSuggestionClicked.invoke(suggestionText) },
-                color = Color.White,
-            )
+                    .padding(vertical = 8.dp)
+                    .background(Color.DarkGray, RoundedCornerShape(12.dp))
+            ) {
+                Text(
+                    text = suggestionText,
+                    fontSize = 12.sp,
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                        .padding(8.dp)
+                        .clickable { onSuggestionClicked.invoke(suggestionText) },
+                    color = Color.White,
+                )
+            }
         }
     }
 }
@@ -112,22 +127,29 @@ fun MessageBlock(
         TextField(
             value = text,
             onValueChange = { onMessageTextChanged.invoke(it) },
-            modifier = Modifier.weight(1f)
+            modifier = Modifier
+                .background(color = Color.Transparent, shape = RoundedCornerShape(16.dp))
+                .weight(1f)
                 .padding(8.dp),
             placeholder = { Text(text = "Enter your message") },
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
-            keyboardActions = KeyboardActions(onDone = { keyboardController?.hide() })
+            keyboardActions = KeyboardActions(onDone = { keyboardController?.hide() }),
+            trailingIcon = {
+                IconButton(
+                    onClick = {
+                        onSendClicked.invoke()
+                        keyboardController?.hide()
+                    },
+                    enabled = isSendButtonEnabled
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Send, 
+                        contentDescription = "Send message",
+                        tint = colorResource(id = R.color.purple_500)
+                    )
+                }
+            }
         )
-
-        IconButton(
-            onClick = {
-                onSendClicked.invoke()
-                keyboardController?.hide()
-            },
-            enabled = isSendButtonEnabled
-        ) {
-            Icon(imageVector = Icons.Filled.Send, contentDescription = "Send message")
-        }
 
     }
 }
