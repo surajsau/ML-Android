@@ -3,34 +3,69 @@ package `in`.surajsau.jisho.ui.gpt
 import `in`.surajsau.jisho.R
 import `in`.surajsau.jisho.base.use
 import `in`.surajsau.jisho.data.model.ChatMessage
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Send
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.colorResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.rememberImagePainter
+
+private val KanyeProfilePicUrl = "https://www.washingtonpost.com/wp-apps/imrs.php?src=https://arc-anglerfish-washpost-prod-washpost.s3.amazonaws.com/public/NNXSYLVFAY5GFBWN6AVBIOBWVI.jpg&w=300&h=237"
 
 @Composable
-fun ChatSuggestionScreen(modifier: Modifier = Modifier) {
+fun ChatSuggestionScreen(
+    modifier: Modifier = Modifier,
+    navigateBack: () -> Unit,
+) {
 
     val (state, event) = use(viewModel = LocalChatSuggestionViewModel.current)
 
     Column(modifier = modifier) {
+
+        TopAppBar(backgroundColor = Color.White, elevation = 0.dp) {
+
+            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxSize()) {
+                IconButton(onClick = { navigateBack.invoke() }) {
+                    Icon(imageVector = Icons.Filled.ArrowBack, contentDescription = "back")
+                }
+
+                Image(
+                    painter = rememberImagePainter(data = KanyeProfilePicUrl),
+                    contentDescription = "Profile picture",
+                    modifier = Modifier.padding(end = 16.dp)
+                        .size(36.dp)
+                        .background(Color.DarkGray, CircleShape)
+                        .clip(CircleShape)
+                        .clipToBounds()
+                        .border(width = 2.dp, color = Color.DarkGray)
+                )
+
+                Text(text = "Kanye", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+            }
+        }
 
         Box(
             modifier = Modifier
@@ -128,9 +163,8 @@ fun MessageBlock(
             value = text,
             onValueChange = { onMessageTextChanged.invoke(it) },
             modifier = Modifier
-                .background(color = Color.Transparent, shape = RoundedCornerShape(16.dp))
                 .weight(1f)
-                .padding(8.dp),
+                .padding(start = 16.dp, end = 16.dp, bottom = 16.dp, top = 8.dp),
             placeholder = { Text(text = "Enter your message") },
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
             keyboardActions = KeyboardActions(onDone = { keyboardController?.hide() }),
@@ -148,7 +182,8 @@ fun MessageBlock(
                         tint = colorResource(id = R.color.purple_500)
                     )
                 }
-            }
+            },
+            shape = RoundedCornerShape(24.dp)
         )
 
     }

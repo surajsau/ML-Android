@@ -75,7 +75,8 @@ fun MLApp(
                         LocalChatSuggestionViewModel provides hiltViewModel<ChatSuggestionViewModelImpl>()
                     ) {
                         ChatSuggestionScreen(
-                            modifier = Modifier.fillMaxSize()
+                            modifier = Modifier.fillMaxSize(),
+                            navigateBack = { navController.popBackStack() }
                         )
                     }
                 }

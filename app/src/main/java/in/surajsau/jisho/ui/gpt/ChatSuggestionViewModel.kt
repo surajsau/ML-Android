@@ -26,7 +26,8 @@ class ChatSuggestionViewModelImpl @Inject constructor(
             chatProvider.latestMessage
                 .receiveAsFlow()
                 .onEach { message ->
-                    _messages.value = _messages.value.toMutableList().apply {
+                    val messages = _messages.value.toMutableList()
+                    _messages.value = messages.apply {
                         val existingMessageIndex = this.indexOfLast { it.timeStamp == message.timeStamp }
                         if (existingMessageIndex == -1)
                             add(0, message)
@@ -35,11 +36,7 @@ class ChatSuggestionViewModelImpl @Inject constructor(
                     }
 
                     if (message is ChatMessage.Message && !message.isMe) {
-                        val text = message.text.apply {
-                            if (!this.contains("."))
-                                this.plus(".")
-                        }
-                        gptProvider.generate(text = text, maxLength = 10)
+                        gptProvider.generate(text = message.text, maxLength = 10)
                     }
                 }
                 .flowOn(Dispatchers.IO)

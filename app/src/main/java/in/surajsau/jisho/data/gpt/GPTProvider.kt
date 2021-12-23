@@ -81,7 +81,12 @@ class GPTProviderImpl @Inject constructor(
             result += decodedToken
         }
 
-        suggestion.trySend(Suggestion.Message(result.replace("\n", " ")))
+        suggestion.trySend(
+            Suggestion.Message(
+                result.replace("\n", " ")
+                    .replace(".", "")
+            )
+        )
     }
 
     private fun randomIndex(probabilities: List<Float>): Int {
