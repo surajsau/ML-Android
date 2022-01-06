@@ -5,10 +5,15 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.media.ExifInterface
+import android.util.JsonReader
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import org.tensorflow.lite.Interpreter
 import java.io.File
 import java.io.FileInputStream
+import java.io.InputStream
+import java.io.InputStreamReader
+import java.nio.channels.FileChannel
 import javax.inject.Inject
 
 class FileProviderImpl @Inject constructor(private val context: Context): FileProvider {
@@ -39,6 +44,17 @@ class FileProviderImpl @Inject constructor(private val context: Context): FilePr
 
         emit(bitmap.getOrElse { error(it) })
     }
+
+    override fun fetchAssetInputStream(fileName: String) = context.assets.open(fileName)
+
+    override fun fetchInterpreter(modelFileName: String): Interpreter {
+        val assetFileDescriptor = context.assets.openFd(modelFileName)
+
+        val fileChannel = FileInputStream(assetFileDescriptor.fileDescriptor).channel
+        val fileByteBuffer = fileChannel.map(FileChannel.MapMode.READ_ONLY, assetFileDescriptor.startOffset, assetFileDescriptor.declaredLength)
+
+        return Interpreter(fileByteBuffer, Interpreter.Options().apply { setNumThreads(4) })
+    }
 }
 
 interface FileProvider {
@@ -46,4 +62,8 @@ interface FileProvider {
     fun fetchBitmap(fileName: String): Flow<Bitmap>
 
     fun fetchAssetBitmap(fileName: String): Flow<Bitmap>
+
+    fun fetchAssetInputStream(fileName: String): InputStream
+
+    fun fetchInterpreter(modelFileName: String): Interpreter
 }
