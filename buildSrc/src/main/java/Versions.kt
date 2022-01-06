@@ -36,6 +36,7 @@ object Dep {
 
         const val DigitalInk = "17.0.0"
         const val Translation = "16.1.2"
+        const val FaceDetection = "16.1.3"
 
         const val CameraX = "1.0.1"
     }
@@ -124,6 +125,7 @@ object Dep {
 
     object MLKit {
         const val Translation = "com.google.mlkit:translate:${Versions.Translation}"
+        const val FaceDetection = "com.google.mlkit:face-detection:${Versions.FaceDetection}"
         const val DigitalInk = "com.google.mlkit:digital-ink-recognition:${Versions.DigitalInk}"
     }
 }

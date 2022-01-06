@@ -55,9 +55,15 @@ class FileProviderImpl @Inject constructor(private val context: Context): FilePr
 
         return Interpreter(fileByteBuffer, Interpreter.Options().apply { setNumThreads(4) })
     }
+
+    override fun fetchFileList(folderName: String): Flow<List<String>> = flow {
+
+    }
 }
 
 interface FileProvider {
+
+    fun fetchFileList(folderName: String): Flow<List<String>>
 
     fun fetchBitmap(fileName: String): Flow<Bitmap>
 
