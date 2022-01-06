@@ -39,6 +39,8 @@ object Dep {
         const val FaceDetection = "16.1.3"
 
         const val CameraX = "1.0.1"
+
+        const val Room = "2.4.0"
     }
 
     object Compose {
@@ -117,6 +119,11 @@ object Dep {
         const val Core = "androidx.camera:camera-camera2:${Versions.CameraX}"
         const val Lifecycle = "androidx.camera:camera-lifecycle:${Versions.CameraX}"
         const val View = "androidx.camera:camera-view:1.0.0-alpha27"
+    }
+
+    object Room {
+        const val Core = "androidx.room:room-runtime:${Versions.Room}"
+        const val Compiler = "androidx.room:room-compiler:${Versions.Room}"
     }
 
     const val Gson = "com.google.code.gson:gson:${Versions.Gson}"

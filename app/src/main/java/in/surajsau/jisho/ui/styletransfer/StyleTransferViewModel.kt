@@ -24,7 +24,7 @@ class StyleTransferViewModelImpl @Inject constructor(
 
     private val _isImageCaptured = MutableStateFlow(false)
 
-    private val _cameraImage = _cameraImageFileName.filterNotNull().flatMapLatest { fileProvider.fetchBitmap(it.value) }
+    private val _cameraImage = _cameraImageFileName.filterNotNull().flatMapLatest { fileProvider.fetchCachedBitmap(it.value) }
     private val _styleImage = _styleImageFileName.filterNotNull().flatMapLatest { fileProvider.fetchAssetBitmap(it.value) }
 
     private val _styleTransferState = combine(

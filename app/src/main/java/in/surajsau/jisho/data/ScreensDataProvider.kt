@@ -23,7 +23,7 @@ class ScreensDataProviderImpl @Inject constructor(): ScreensDataProvider {
                     previewImage = "",
                     title = "Style Transfer",
                     description = "Character Recognition & Translation using Google MLKit",
-                    tags = listOf("MLKit")
+                    tags = listOf("TFLite")
                 ),
 
                 Screen(
@@ -31,7 +31,15 @@ class ScreensDataProviderImpl @Inject constructor(): ScreensDataProvider {
                     previewImage = "",
                     title = "Text Suggestion using GPT",
                     description = "Using Huggingface/Transformers GPT model for text completion",
-                    tags = listOf("MLKit")
+                    tags = listOf("MLKit", "HuggingFace", "TFLite")
+                ),
+
+                Screen(
+                    destinations = Destinations.Facenet,
+                    previewImage = "",
+                    title = "On-device Face Recognition & Classification",
+                    description = "Using MLKit's FaceDetection to crop out face and using Sirius-AI's MobileFacenet tflite for recognition",
+                    tags = listOf("MLKit", "TFLite")
                 ),
             )
         )
