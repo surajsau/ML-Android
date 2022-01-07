@@ -1,10 +1,9 @@
 package `in`.surajsau.jisho.data.db
 
-import `in`.surajsau.jisho.data.db.Face
 import androidx.room.Database
 import androidx.room.RoomDatabase
 
-@Database(entities = [Face::class], version = AppDb.VERSION)
+@Database(entities = [FaceImage::class], version = AppDb.VERSION)
 abstract class AppDb: RoomDatabase() {
 
     abstract fun faceDao(): FacesDAO

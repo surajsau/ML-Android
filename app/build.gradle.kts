@@ -96,6 +96,7 @@ dependencies {
     implementation(Dep.Coil.Gif)
 
     implementation(Dep.Room.Core)
+    implementation(Dep.Room.Ktx)
     kapt(Dep.Room.Compiler)
 
     testImplementation("junit:junit:4.13.2")

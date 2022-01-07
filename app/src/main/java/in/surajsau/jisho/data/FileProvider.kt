@@ -1,5 +1,6 @@
 package `in`.surajsau.jisho.data
 
+import `in`.surajsau.jisho.base.getUriForFile
 import `in`.surajsau.jisho.base.rotate
 import android.content.Context
 import android.graphics.Bitmap
@@ -23,6 +24,31 @@ class FileProviderImpl @Inject constructor(private val context: Context): FilePr
         val cacheDir = context.externalCacheDir ?: throw Exception("external cache not found")
         val bitmap = getBitmapForFile(File(cacheDir, fileName))
         emit(bitmap.getOrElse { throw it })
+    }
+
+    override suspend fun storeBitmap(folderName: String, fileName: String, bitmap: Bitmap) {
+        val storageFolder = File(context.filesDir, folderName)
+        if (!storageFolder.exists())
+            storageFolder.mkdirs()
+
+        val imageFile = File(storageFolder, fileName)
+
+        val uri = context.getUriForFile(imageFile)
+        runCatching {
+            val os = context.contentResolver.openOutputStream(uri) ?: throw Exception("Couldn't open OutpuStream")
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, os)
+            os.close()
+        }.onFailure { throw it }
+    }
+
+    override fun getCacheFilePath(fileName: String): String {
+        val cacheDir = context.externalCacheDir ?: throw Exception("external cache not found")
+        return File(cacheDir, fileName).absolutePath
+    }
+
+    override fun getFilePath(folderName: String, fileName: String): String {
+        val storageFolder = File(context.filesDir, folderName)
+        return File(storageFolder, fileName).absolutePath
     }
 
     override fun fetchAssetBitmap(fileName: String): Flow<Bitmap> = flow {
@@ -82,4 +108,10 @@ interface FileProvider {
     fun fetchAssetInputStream(fileName: String): InputStream
 
     fun fetchInterpreter(modelFileName: String): Interpreter
+
+    suspend fun storeBitmap(folderName: String, fileName: String, bitmap: Bitmap)
+
+    fun getCacheFilePath(fileName: String): String
+
+    fun getFilePath(folderName: String, fileName: String): String
 }

@@ -65,4 +65,17 @@ fun FacenetScreen(modifier: Modifier = Modifier) {
             }
         }
     }
+
+    when (state.imageDialogMode) {
+        is FacenetViewModel.ImageDialogMode.ShowAddFace -> {
+            AddFaceDialog(
+                filePath = state.imageDialogMode.filePath,
+                face = state.imageDialogMode.face,
+                onNameAdded = { event(FacenetViewModel.Event.FaceNameReceived(fileName = state.imageDialogMode.fileName, faceName = it)) },
+                onDismiss = { event(FacenetViewModel.Event.DismissImageDialog) }
+            )
+        }
+
+        else -> { /* do nothing */}
+    }
 }

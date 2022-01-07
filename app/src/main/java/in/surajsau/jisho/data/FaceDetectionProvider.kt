@@ -6,6 +6,8 @@ import androidx.camera.core.ImageProxy
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.face.Face
 import com.google.mlkit.vision.face.FaceDetection
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import javax.inject.Inject
@@ -34,6 +36,8 @@ class FaceDetectionProviderImpl @Inject constructor(): FaceDetectionProvider {
         detector.process(image!!)
             .addOnSuccessListener { faces -> trySend(faces) }
             .addOnCompleteListener { close() }
+
+        awaitClose { close() }
     }
 
 }

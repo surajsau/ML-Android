@@ -123,6 +123,7 @@ object Dep {
 
     object Room {
         const val Core = "androidx.room:room-runtime:${Versions.Room}"
+        const val Ktx = "androidx.room:room-ktx:${Versions.Room}"
         const val Compiler = "androidx.room:room-compiler:${Versions.Room}"
     }
 
