@@ -10,6 +10,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
@@ -38,14 +39,17 @@ fun HomeScreen(
     Box(modifier = modifier) {
         LazyColumn(
             modifier = Modifier.fillMaxSize()
-                .padding(16.dp)
+                .padding(horizontal = 16.dp)
         ) {
-            items(state.screens) { screen ->
+            itemsIndexed(state.screens) { index, screen ->
 
                 ScreenCard(
                     screen = screen,
                     onClick = { navigateToDestination.invoke(it) },
-                    modifier = Modifier.padding(top = 16.dp)
+                    modifier = Modifier.padding(
+                        top = if (index == 0) 16.dp else 0.dp,
+                        bottom = 16.dp
+                    )
                 )
             }
         }

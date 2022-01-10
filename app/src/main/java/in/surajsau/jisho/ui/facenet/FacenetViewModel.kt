@@ -1,26 +1,32 @@
 package `in`.surajsau.jisho.ui.facenet
 
 import `in`.surajsau.jisho.base.SingleFlowViewModel
-import `in`.surajsau.jisho.data.FaceDetectionProvider
 import `in`.surajsau.jisho.data.FacesDataProvider
 import `in`.surajsau.jisho.data.FileProvider
 import `in`.surajsau.jisho.data.db.FaceImage
-import android.util.Log
+import `in`.surajsau.jisho.domain.facenet.DetectFaces
+import `in`.surajsau.jisho.domain.facenet.SaveFaceEmbedding
+import `in`.surajsau.jisho.domain.facenet.SaveImage
+import `in`.surajsau.jisho.domain.facenet.SaveNewFace
 import androidx.compose.runtime.compositionLocalOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.google.mlkit.vision.face.Face
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
+@OptIn(ExperimentalCoroutinesApi::class)
 class FacenetViewModelImpl @Inject constructor(
     private val fileProvider: FileProvider,
     private val facesDataProvider: FacesDataProvider,
-    private val faceDetectionProvider: FaceDetectionProvider
+    private val detectFaces: DetectFaces,
+    private val saveFaceEmbedding: SaveFaceEmbedding,
+    private val saveImage: SaveImage,
+    private val saveNewFace: SaveNewFace,
 ) : ViewModel(), FacenetViewModel {
 
     init {
@@ -50,18 +56,22 @@ class FacenetViewModelImpl @Inject constructor(
 
     private val _imageDialogMode = MutableStateFlow<FacenetViewModel.ImageDialogMode>(FacenetViewModel.ImageDialogMode.DontShow)
 
+    private val _showLoader = MutableStateFlow(false)
+
     override val state: StateFlow<FacenetViewModel.State>
         get() = combine(
             _peopleImages,
             _images,
             _screenMode,
-            _imageDialogMode
-        ) { peopleImages, images, screenMode, imageDialogMode ->
+            _imageDialogMode,
+            _showLoader,
+        ) { peopleImages, images, screenMode, imageDialogMode, showLoader ->
             FacenetViewModel.State(
                 personImages = peopleImages,
                 images = images,
                 screenMode = screenMode,
-                imageDialogMode = imageDialogMode
+                imageDialogMode = imageDialogMode,
+                showLoader = showLoader
             )
         }.stateIn(viewModelScope, SharingStarted.Eagerly, FacenetViewModel.State())
 
@@ -71,50 +81,48 @@ class FacenetViewModelImpl @Inject constructor(
             is FacenetViewModel.Event.ClassifyFaceClicked -> _screenMode.value = FacenetViewModel.ScreenMode.RecogniseFace
             is FacenetViewModel.Event.DismissImageDialog-> _imageDialogMode.value = FacenetViewModel.ImageDialogMode.DontShow
             is FacenetViewModel.Event.CameraResultReceived -> {
-                    viewModelScope.launch {
-                        fileProvider.fetchCachedBitmap(fileName = event.fileName)
-                            .flatMapLatest { faceDetectionProvider.getFaces(it) }
-                            .flowOn(Dispatchers.IO)
-                            .collect { faces ->
-                                val filePath = fileProvider.getCacheFilePath(fileName = event.fileName)
+                viewModelScope.launch {
+                    detectFaces.invoke(fileName = event.fileName)
+                        .onStart { _showLoader.value = true }
+                        .flowOn(Dispatchers.IO)
+                        .collect { faceFileNames ->
+                            _showLoader.value = false
 
-                                Log.e("Facenet", "cache file path: $filePath")
-                                Log.e("Facenet", "face: ${faces[0].boundingBox.top}-${faces[0].boundingBox.left}")
-
-                                _imageDialogMode.value = when (_screenMode.value) {
-                                    FacenetViewModel.ScreenMode.AddFace -> {
-                                        FacenetViewModel.ImageDialogMode.ShowAddFace(
-                                            filePath = filePath,
-                                            fileName = event.fileName,
-                                            face = faces[0]
-                                        )
-                                    }
-
-                                    FacenetViewModel.ScreenMode.RecogniseFace -> {
-                                        FacenetViewModel.ImageDialogMode.ShowRecogniseFace(
-                                            filePath = filePath,
-                                            isLoading = true
-                                        )
-                                    }
-
-                                    else -> FacenetViewModel.ImageDialogMode.DontShow
-                                }
+                            if (faceFileNames.isEmpty()) {
+                                _imageDialogMode.value = FacenetViewModel.ImageDialogMode.DontShow
+                                return@collect
                             }
-                    }
+
+                            val filePath = fileProvider.getCacheFilePath(fileName = faceFileNames[0])
+
+                            _imageDialogMode.value = when (_screenMode.value) {
+                                FacenetViewModel.ScreenMode.AddFace -> {
+                                    FacenetViewModel.ImageDialogMode.ShowAddFace(
+                                        faceFilePath = filePath,
+                                        faceFileName = faceFileNames[0],
+                                        imageFileName = event.fileName,
+                                    )
+                                }
+
+                                FacenetViewModel.ScreenMode.RecogniseFace -> {
+                                    FacenetViewModel.ImageDialogMode.ShowRecogniseFace(
+                                        filePath = filePath,
+                                        isLoading = true
+                                    )
+                                }
+
+                                else -> FacenetViewModel.ImageDialogMode.DontShow
+                            }
+                        }
+                }
             }
 
             is FacenetViewModel.Event.FaceNameReceived -> {
-                viewModelScope.launch {
-                    fileProvider.fetchCachedBitmap(fileName = event.fileName)
-                        .onEach {
-                            fileProvider.storeBitmap(
-                                folderName = "images/faces",
-                                fileName = event.fileName,
-                                bitmap = it
-                            )
-                        }
-                        .flowOn(Dispatchers.IO)
-                        .collect { facesDataProvider.saveNewFace(faceName = event.faceName, fileName = event.fileName) }
+                viewModelScope.launch(Dispatchers.IO) {
+                    saveFaceEmbedding.invoke(faceName = event.faceName, faceFileName = event.faceFileName)
+                    saveNewFace.invoke(faceName = event.faceName, fileName = event.faceFileName)
+                    saveImage.invoke(faceName = event.faceName, fileName = event.imageFileName)
+
                     _imageDialogMode.value = FacenetViewModel.ImageDialogMode.DontShow
                 }
             }
@@ -147,7 +155,7 @@ interface FacenetViewModel: SingleFlowViewModel<FacenetViewModel.Event, FacenetV
         object ClassifyFaceClicked: Event()
         object CameraPermissionDenied: Event()
         object DismissImageDialog: Event()
-        data class FaceNameReceived(val fileName: String, val faceName: String): Event()
+        data class FaceNameReceived(val imageFileName: String, val faceFileName: String, val faceName: String): Event()
         data class FaceSelected(val faceName: String): Event()
         data class CameraResultReceived(val fileName: String): Event()
     }
@@ -156,7 +164,8 @@ interface FacenetViewModel: SingleFlowViewModel<FacenetViewModel.Event, FacenetV
         val personImages: List<FaceImage> = emptyList(),
         val images: List<FaceImage> = emptyList(),
         val screenMode: ScreenMode = ScreenMode.Empty,
-        val imageDialogMode: ImageDialogMode = ImageDialogMode.DontShow
+        val imageDialogMode: ImageDialogMode = ImageDialogMode.DontShow,
+        val showLoader: Boolean = false,
     )
 
     enum class ScreenMode {
@@ -165,7 +174,13 @@ interface FacenetViewModel: SingleFlowViewModel<FacenetViewModel.Event, FacenetV
 
     sealed class ImageDialogMode {
         object DontShow: ImageDialogMode()
-        data class ShowAddFace(val filePath: String, val fileName: String, val face: Face): ImageDialogMode()
+
+        data class ShowAddFace(
+            val faceFilePath: String,
+            val imageFileName: String,
+            val faceFileName: String
+        ): ImageDialogMode()
+
         data class ShowRecogniseFace(val isLoading: Boolean, val filePath: String): ImageDialogMode()
     }
 }

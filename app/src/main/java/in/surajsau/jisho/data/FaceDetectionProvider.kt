@@ -10,23 +10,27 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
 class FaceDetectionProviderImpl @Inject constructor(): FaceDetectionProvider {
 
     val detector by lazy { FaceDetection.getClient() }
 
-    @ExperimentalGetImage
-    override fun getFaces(imageProxy: ImageProxy): Flow<List<Face>> {
-        val image = imageProxy.image?.let {
-            InputImage.fromMediaImage(it, imageProxy.imageInfo.rotationDegrees)
-        }
-        return detectFacesFlow(image)
-    }
-
-    override fun getFaces(bitmap: Bitmap): Flow<List<Face>> {
+    override fun getFaces(bitmap: Bitmap): Flow<List<Bitmap>> {
         val image = InputImage.fromBitmap(bitmap, 0)
         return detectFacesFlow(image)
+            .map { faces ->
+                faces.map { face ->
+                    Bitmap.createBitmap(
+                        bitmap,
+                        face.boundingBox.left,
+                        face.boundingBox.top,
+                        face.boundingBox.width(),
+                        face.boundingBox.height()
+                    )
+                }
+            }
     }
 
     private fun detectFacesFlow(image: InputImage?): Flow<List<Face>> = callbackFlow {
@@ -44,7 +48,5 @@ class FaceDetectionProviderImpl @Inject constructor(): FaceDetectionProvider {
 
 interface FaceDetectionProvider {
 
-    fun getFaces(imageProxy: ImageProxy): Flow<List<Face>>
-
-    fun getFaces(bitmap: Bitmap): Flow<List<Face>>
+    fun getFaces(bitmap: Bitmap): Flow<List<Bitmap>>
 }

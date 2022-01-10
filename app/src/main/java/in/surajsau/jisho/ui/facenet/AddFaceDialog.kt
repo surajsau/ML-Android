@@ -1,36 +1,32 @@
 package `in`.surajsau.jisho.ui.facenet
 
-import `in`.surajsau.jisho.base.getUriForImage
-import androidx.compose.foundation.Canvas
+import android.graphics.*
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import coil.compose.rememberImagePainter
-import com.google.mlkit.vision.face.Face
 import java.io.File
 
 @Composable
 fun AddFaceDialog(
     modifier: Modifier = Modifier,
     filePath: String,
-    face: Face,
     onNameAdded: (String) -> Unit,
     onDismiss: () -> Unit
 ) {
-
-    val painter = rememberImagePainter(data = File(filePath))
 
     var input by remember { mutableStateOf("") }
 
@@ -42,26 +38,16 @@ fun AddFaceDialog(
             modifier = modifier.background(Color.White),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Box(
+            Image(
+                painter = rememberImagePainter(data = File(filePath)),
+                contentDescription = null,
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .height(200.dp)
-            ) {
-                Image(
-                    painter = painter,
-                    contentDescription = null,
-                    modifier = Modifier.fillMaxWidth(),
-                    contentScale = ContentScale.FillWidth,
-                )
-
-                Canvas(modifier = Modifier.fillMaxSize()) {
-                    drawRect(
-                        color = Color.Black,
-                        topLeft = Offset(x = face.boundingBox.top.toFloat(), y = face.boundingBox.left.toFloat()),
-                        size = Size(width = face.boundingBox.width().toFloat(), height = face.boundingBox.height().toFloat())
-                    )
-                }
-            }
+                    .clip(RoundedCornerShape(2.dp))
+                    .clipToBounds()
+                    .size(200.dp)
+                    .padding(16.dp),
+                contentScale = ContentScale.Inside,
+            )
 
             TextField(
                 modifier = Modifier
@@ -89,4 +75,13 @@ fun AddFaceDialog(
             Spacer(modifier = Modifier.height(16.dp))
         }
     }
+}
+
+fun Rect.scale(factor: Float): Rect {
+    val left = (this.left * factor).toInt()
+    val right = (left + (this.width() * factor).toInt())
+    val top = (this.top * factor).toInt()
+    val bottom = (top + (this.height() * factor).toInt())
+
+    return Rect(left, top, right, bottom)
 }

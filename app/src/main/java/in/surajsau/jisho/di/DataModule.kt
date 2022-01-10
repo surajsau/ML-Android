@@ -57,6 +57,10 @@ abstract class DataModule {
         fun provideFacesProvider(appDb: AppDb): FacesDataProvider = FacesDataProviderImpl(appDb.faceDao())
 
         @Provides
+        fun proviceFaceRecognitionProvider(@ApplicationContext context: Context): FaceRecognitionProvider
+            = FaceRecognitionProviderImpl(context)
+
+        @Provides
         fun provideGPTEncoderProvider(fileProvider: FileProvider) = GPTEncoderProvider(fileProvider)
 
         @Provides

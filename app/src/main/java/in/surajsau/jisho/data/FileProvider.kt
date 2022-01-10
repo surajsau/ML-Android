@@ -11,19 +11,31 @@ import android.util.JsonReader
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import org.tensorflow.lite.Interpreter
-import java.io.File
-import java.io.FileInputStream
-import java.io.InputStream
-import java.io.InputStreamReader
+import java.io.*
 import java.nio.channels.FileChannel
 import javax.inject.Inject
 
 class FileProviderImpl @Inject constructor(private val context: Context): FileProvider {
 
-    override fun fetchCachedBitmap(fileName: String): Flow<Bitmap> = flow {
+    override suspend fun fetchCachedBitmap(fileName: String): Bitmap {
         val cacheDir = context.externalCacheDir ?: throw Exception("external cache not found")
         val bitmap = getBitmapForFile(File(cacheDir, fileName))
-        emit(bitmap.getOrElse { throw it })
+        return bitmap.getOrElse { throw it }
+    }
+
+    override suspend fun cacheBitmap(bitmap: Bitmap): String {
+        val cacheDir = context.externalCacheDir ?: throw Exception("external cache not found")
+        val fileName = "${System.currentTimeMillis()}.jpg"
+
+        val imageFile = File(cacheDir, fileName)
+
+        runCatching {
+            val os = imageFile.outputStream()
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, os)
+            os.close()
+        }.onFailure { throw it }
+
+        return fileName
     }
 
     override suspend fun storeBitmap(folderName: String, fileName: String, bitmap: Bitmap) {
@@ -95,13 +107,31 @@ class FileProviderImpl @Inject constructor(private val context: Context): FilePr
                 else -> fileBitmap
             }
         }.onFailure { it.printStackTrace() }
+
+    override suspend fun saveEmbeddings(folderName: String, fileName: String, embedding: FloatArray) {
+        val storageFolder = File(context.filesDir, folderName)
+
+        if (!storageFolder.exists())
+            storageFolder.mkdirs()
+
+        val imageFile = File(storageFolder, fileName)
+
+        val uri = context.getUriForFile(imageFile)
+        runCatching {
+            val os = context.contentResolver.openOutputStream(uri) ?: throw Exception("Couldn't open OutpuStream")
+            val osw = OutputStreamWriter(os)
+            osw.write(embedding.joinToString())
+            osw.close()
+            os.close()
+        }.onFailure { throw it }
+    }
 }
 
 interface FileProvider {
 
     fun fetchFiles(folderName: String): Flow<List<String>>
 
-    fun fetchCachedBitmap(fileName: String): Flow<Bitmap>
+    suspend fun fetchCachedBitmap(fileName: String): Bitmap
 
     fun fetchAssetBitmap(fileName: String): Flow<Bitmap>
 
@@ -109,9 +139,13 @@ interface FileProvider {
 
     fun fetchInterpreter(modelFileName: String): Interpreter
 
+    suspend fun cacheBitmap(bitmap: Bitmap): String
+
     suspend fun storeBitmap(folderName: String, fileName: String, bitmap: Bitmap)
 
     fun getCacheFilePath(fileName: String): String
 
     fun getFilePath(folderName: String, fileName: String): String
+
+    suspend fun saveEmbeddings(folderName: String, fileName: String, embedding: FloatArray)
 }
