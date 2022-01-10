@@ -148,4 +148,9 @@ interface FileProvider {
     fun getFilePath(folderName: String, fileName: String): String
 
     suspend fun saveEmbeddings(folderName: String, fileName: String, embedding: FloatArray)
+
+    companion object {
+        const val FACENET_IMAGE_FOLDER = "images/faces/"
+        const val FACENET_EMBEDDINGS_FOLDER = "embeddings/faces/"
+    }
 }

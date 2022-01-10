@@ -1,4 +1,4 @@
-package `in`.surajsau.jisho.ui.styletransfer
+package `in`.surajsau.jisho.ui.base
 
 import `in`.surajsau.jisho.R
 import android.view.Surface.ROTATION_270

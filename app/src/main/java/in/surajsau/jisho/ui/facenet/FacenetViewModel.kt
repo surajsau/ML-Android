@@ -1,13 +1,12 @@
 package `in`.surajsau.jisho.ui.facenet
 
 import `in`.surajsau.jisho.base.SingleFlowViewModel
-import `in`.surajsau.jisho.data.FacesDataProvider
 import `in`.surajsau.jisho.data.FileProvider
 import `in`.surajsau.jisho.data.db.FaceImage
-import `in`.surajsau.jisho.domain.facenet.DetectFaces
-import `in`.surajsau.jisho.domain.facenet.SaveFaceEmbedding
-import `in`.surajsau.jisho.domain.facenet.SaveImage
-import `in`.surajsau.jisho.domain.facenet.SaveNewFace
+import `in`.surajsau.jisho.domain.facenet.*
+import `in`.surajsau.jisho.domain.models.FaceModel
+import `in`.surajsau.jisho.domain.models.GalleryImageModel
+import android.util.Log
 import androidx.compose.runtime.compositionLocalOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -22,16 +21,18 @@ import javax.inject.Inject
 @OptIn(ExperimentalCoroutinesApi::class)
 class FacenetViewModelImpl @Inject constructor(
     private val fileProvider: FileProvider,
-    private val facesDataProvider: FacesDataProvider,
     private val detectFaces: DetectFaces,
     private val saveFaceEmbedding: SaveFaceEmbedding,
     private val saveImage: SaveImage,
     private val saveNewFace: SaveNewFace,
+    private val fetchAllImages: FetchAllImages,
+    private val fetchAllFaces: FetchAllFaces,
+    private val fetchAllImagesForFace: FetchAllImagesForFace,
 ) : ViewModel(), FacenetViewModel {
 
     init {
         viewModelScope.launch {
-            facesDataProvider.getAllImages()
+            fetchAllImages.invoke()
                 .flowOn(Dispatchers.IO)
                 .collect {
                     _images.value = it
@@ -42,15 +43,15 @@ class FacenetViewModelImpl @Inject constructor(
                         FacenetViewModel.ScreenMode.Gallery
                 }
 
-            facesDataProvider.getFaces()
+            fetchAllFaces.invoke()
                 .flowOn(Dispatchers.IO)
                 .collect { _peopleImages.value = it }
         }
     }
 
-    private val _images = MutableStateFlow(emptyList<FaceImage>())
+    private val _images = MutableStateFlow(emptyList<GalleryImageModel>())
 
-    private val _peopleImages = MutableStateFlow(emptyList<FaceImage>())
+    private val _peopleImages = MutableStateFlow(emptyList<FaceModel>())
 
     private val _screenMode = MutableStateFlow(FacenetViewModel.ScreenMode.Empty)
 
@@ -76,6 +77,8 @@ class FacenetViewModelImpl @Inject constructor(
         }.stateIn(viewModelScope, SharingStarted.Eagerly, FacenetViewModel.State())
 
     override fun onEvent(event: FacenetViewModel.Event) {
+        Log.e("Facenet", "$event")
+
         when (event) {
             is FacenetViewModel.Event.AddNewFaceClicked -> _screenMode.value = FacenetViewModel.ScreenMode.AddFace
             is FacenetViewModel.Event.ClassifyFaceClicked -> _screenMode.value = FacenetViewModel.ScreenMode.RecogniseFace
@@ -124,24 +127,28 @@ class FacenetViewModelImpl @Inject constructor(
                     saveImage.invoke(faceName = event.faceName, fileName = event.imageFileName)
 
                     _imageDialogMode.value = FacenetViewModel.ImageDialogMode.DontShow
+
+                    _screenMode.value = FacenetViewModel.ScreenMode.Gallery
                 }
+
+                refreshImages()
             }
 
             is FacenetViewModel.Event.FaceSelected -> {
                 viewModelScope.launch {
-                    facesDataProvider.getImagesForFace(faceName = event.faceName)
+                    fetchAllImagesForFace.invoke(faceName = event.faceName)
                         .flowOn(Dispatchers.IO)
                         .collect { _images.value = it }
                 }
             }
+        }
+    }
 
-            is FacenetViewModel.Event.Refresh -> {
-                viewModelScope.launch {
-                    facesDataProvider.getFaces()
-                        .flowOn(Dispatchers.IO)
-                        .collect { _peopleImages.value = it }
-                }
-            }
+    private fun refreshImages() {
+        viewModelScope.launch {
+            fetchAllFaces.invoke()
+                .flowOn(Dispatchers.IO)
+                .collect { _peopleImages.value = it }
         }
     }
 
@@ -150,7 +157,6 @@ class FacenetViewModelImpl @Inject constructor(
 interface FacenetViewModel: SingleFlowViewModel<FacenetViewModel.Event, FacenetViewModel.State> {
 
     sealed class Event {
-        object Refresh: Event()
         object AddNewFaceClicked: Event()
         object ClassifyFaceClicked: Event()
         object CameraPermissionDenied: Event()
@@ -161,8 +167,8 @@ interface FacenetViewModel: SingleFlowViewModel<FacenetViewModel.Event, FacenetV
     }
 
     data class State(
-        val personImages: List<FaceImage> = emptyList(),
-        val images: List<FaceImage> = emptyList(),
+        val personImages: List<FaceModel> = emptyList(),
+        val images: List<GalleryImageModel> = emptyList(),
         val screenMode: ScreenMode = ScreenMode.Empty,
         val imageDialogMode: ImageDialogMode = ImageDialogMode.DontShow,
         val showLoader: Boolean = false,

@@ -11,7 +11,7 @@ class SaveImage @Inject constructor(
 
     suspend fun invoke(faceName: String, fileName: String) {
         val bitmap = fileProvider.fetchCachedBitmap(fileName = fileName)
-        fileProvider.storeBitmap(folderName = "images/faces", fileName = fileName, bitmap = bitmap)
+        fileProvider.storeBitmap(folderName = FileProvider.FACENET_IMAGE_FOLDER, fileName = fileName, bitmap = bitmap)
 
         facesDataProvider.saveFace(faceName = faceName, fileName = fileName, isPrimary = false)
     }

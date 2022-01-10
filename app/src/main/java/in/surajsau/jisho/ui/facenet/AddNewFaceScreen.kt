@@ -1,7 +1,7 @@
 package `in`.surajsau.jisho.ui.facenet
 
 import `in`.surajsau.jisho.ui.base.AskPermissionScreen
-import `in`.surajsau.jisho.ui.styletransfer.CameraScreen
+import `in`.surajsau.jisho.ui.base.CameraScreen
 import android.Manifest
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable

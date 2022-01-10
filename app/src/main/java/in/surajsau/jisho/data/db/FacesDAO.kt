@@ -14,8 +14,8 @@ interface FacesDAO {
     @Query("SELECT * FROM faceimage WHERE faceName = :name")
     suspend fun fetchImagesFor(name: String): List<FaceImage>
 
-    @Query("SELECT * FROM faceimage WHERE isPrimary = 0")
-    suspend fun fetchAllImages(): List<FaceImage>
+    @Query("SELECT * FROM faceimage WHERE isPrimary = :isPrimary")
+    suspend fun fetchAllImages(isPrimary: Int): List<FaceImage>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun saveFace(face: FaceImage)

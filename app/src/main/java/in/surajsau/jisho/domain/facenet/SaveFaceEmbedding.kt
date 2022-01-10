@@ -12,6 +12,6 @@ class SaveFaceEmbedding @Inject constructor(
     suspend fun invoke(faceName: String, faceFileName: String) {
         val bitmap = fileProvider.fetchCachedBitmap(fileName = faceFileName)
         val embeddings = faceRecognitionProvider.generateEmbedding(bitmap)
-        fileProvider.saveEmbeddings(folderName = "embeddings/faces", fileName = faceName, embedding = embeddings)
+        fileProvider.saveEmbeddings(folderName = FileProvider.FACENET_EMBEDDINGS_FOLDER, fileName = faceName, embedding = embeddings)
     }
 }
