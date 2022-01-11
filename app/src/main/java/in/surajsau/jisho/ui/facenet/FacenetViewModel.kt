@@ -5,7 +5,7 @@ import `in`.surajsau.jisho.data.FileProvider
 import `in`.surajsau.jisho.data.db.FaceImage
 import `in`.surajsau.jisho.domain.facenet.*
 import `in`.surajsau.jisho.domain.models.FaceModel
-import `in`.surajsau.jisho.domain.models.GalleryImageModel
+import `in`.surajsau.jisho.domain.models.GalleryModel
 import android.util.Log
 import androidx.compose.runtime.compositionLocalOf
 import androidx.lifecycle.ViewModel
@@ -20,7 +20,9 @@ import javax.inject.Inject
 @HiltViewModel
 @OptIn(ExperimentalCoroutinesApi::class)
 class FacenetViewModelImpl @Inject constructor(
+    private val cleanup: Cleanup,
     private val fileProvider: FileProvider,
+    private val loadEmbeddings: LoadEmbeddings,
     private val detectFaces: DetectFaces,
     private val saveFaceEmbedding: SaveFaceEmbedding,
     private val saveImage: SaveImage,
@@ -28,10 +30,13 @@ class FacenetViewModelImpl @Inject constructor(
     private val fetchAllImages: FetchAllImages,
     private val fetchAllFaces: FetchAllFaces,
     private val fetchAllImagesForFace: FetchAllImagesForFace,
+    private val recogniseFace: RecogniseFace,
 ) : ViewModel(), FacenetViewModel {
 
     init {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
+            loadEmbeddings.invoke()
+
             fetchAllImages.invoke()
                 .flowOn(Dispatchers.IO)
                 .collect {
@@ -49,7 +54,7 @@ class FacenetViewModelImpl @Inject constructor(
         }
     }
 
-    private val _images = MutableStateFlow(emptyList<GalleryImageModel>())
+    private val _images = MutableStateFlow(emptyList<GalleryModel>())
 
     private val _peopleImages = MutableStateFlow(emptyList<FaceModel>())
 
@@ -69,7 +74,13 @@ class FacenetViewModelImpl @Inject constructor(
         ) { peopleImages, images, screenMode, imageDialogMode, showLoader ->
             FacenetViewModel.State(
                 personImages = peopleImages,
-                images = images,
+                images = images.let {
+                    // add empty cells at the end of list
+                    val emptyCellsRequired = it.size % FacenetViewModel.GalleryModelsPerRow
+                    it.toMutableList().apply {
+                        repeat(emptyCellsRequired) { add(GalleryModel.Empty) }
+                    }
+                },
                 screenMode = screenMode,
                 imageDialogMode = imageDialogMode,
                 showLoader = showLoader
@@ -80,6 +91,7 @@ class FacenetViewModelImpl @Inject constructor(
         Log.e("Facenet", "$event")
 
         when (event) {
+            is FacenetViewModel.Event.Close -> cleanup.invoke()
             is FacenetViewModel.Event.AddNewFaceClicked -> _screenMode.value = FacenetViewModel.ScreenMode.AddFace
             is FacenetViewModel.Event.ClassifyFaceClicked -> _screenMode.value = FacenetViewModel.ScreenMode.RecogniseFace
             is FacenetViewModel.Event.DismissImageDialog-> _imageDialogMode.value = FacenetViewModel.ImageDialogMode.DontShow
@@ -98,7 +110,7 @@ class FacenetViewModelImpl @Inject constructor(
 
                             val filePath = fileProvider.getCacheFilePath(fileName = faceFileNames[0])
 
-                            _imageDialogMode.value = when (_screenMode.value) {
+                            _imageDialogMode.value = when (event.screenMode) {
                                 FacenetViewModel.ScreenMode.AddFace -> {
                                     FacenetViewModel.ImageDialogMode.ShowAddFace(
                                         faceFilePath = filePath,
@@ -108,9 +120,11 @@ class FacenetViewModelImpl @Inject constructor(
                                 }
 
                                 FacenetViewModel.ScreenMode.RecogniseFace -> {
+                                    val estimatedName = recogniseFace.invoke(fileName = faceFileNames[0])
                                     FacenetViewModel.ImageDialogMode.ShowRecogniseFace(
                                         filePath = filePath,
-                                        isLoading = true
+                                        isLoading = true,
+                                        estimatedName = estimatedName
                                     )
                                 }
 
@@ -163,12 +177,14 @@ interface FacenetViewModel: SingleFlowViewModel<FacenetViewModel.Event, FacenetV
         object DismissImageDialog: Event()
         data class FaceNameReceived(val imageFileName: String, val faceFileName: String, val faceName: String): Event()
         data class FaceSelected(val faceName: String): Event()
-        data class CameraResultReceived(val fileName: String): Event()
+        data class CameraResultReceived(val screenMode: ScreenMode, val fileName: String): Event()
+
+        object Close: Event()
     }
 
     data class State(
         val personImages: List<FaceModel> = emptyList(),
-        val images: List<GalleryImageModel> = emptyList(),
+        val images: List<GalleryModel> = emptyList(),
         val screenMode: ScreenMode = ScreenMode.Empty,
         val imageDialogMode: ImageDialogMode = ImageDialogMode.DontShow,
         val showLoader: Boolean = false,
@@ -187,7 +203,15 @@ interface FacenetViewModel: SingleFlowViewModel<FacenetViewModel.Event, FacenetV
             val faceFileName: String
         ): ImageDialogMode()
 
-        data class ShowRecogniseFace(val isLoading: Boolean, val filePath: String): ImageDialogMode()
+        data class ShowRecogniseFace(
+            val isLoading: Boolean,
+            val filePath: String,
+            val estimatedName: String
+        ): ImageDialogMode()
+    }
+
+    companion object {
+        const val GalleryModelsPerRow = 3
     }
 }
 

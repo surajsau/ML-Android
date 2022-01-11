@@ -1,6 +1,7 @@
 package `in`.surajsau.jisho.data
 
 import android.graphics.Bitmap
+import android.util.Log
 import androidx.camera.core.ExperimentalGetImage
 import androidx.camera.core.ImageProxy
 import com.google.mlkit.vision.common.InputImage
@@ -38,8 +39,15 @@ class FaceDetectionProviderImpl @Inject constructor(): FaceDetectionProvider {
             close(Exception("Image not found"))
 
         detector.process(image!!)
+            .addOnFailureListener {
+                it.printStackTrace()
+                throw it
+            }
             .addOnSuccessListener { faces -> trySend(faces) }
-            .addOnCompleteListener { close() }
+            .addOnCompleteListener {
+                Log.e("Facenet", "Image detection completed")
+                close()
+            }
 
         awaitClose { close() }
     }

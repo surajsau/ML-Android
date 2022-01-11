@@ -1,6 +1,5 @@
 package `in`.surajsau.jisho.ui.facenet
 
-import android.graphics.*
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -12,7 +11,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
@@ -75,13 +73,4 @@ fun AddFaceDialog(
             Spacer(modifier = Modifier.height(16.dp))
         }
     }
-}
-
-fun Rect.scale(factor: Float): Rect {
-    val left = (this.left * factor).toInt()
-    val right = (left + (this.width() * factor).toInt())
-    val top = (this.top * factor).toInt()
-    val bottom = (top + (this.height() * factor).toInt())
-
-    return Rect(left, top, right, bottom)
 }

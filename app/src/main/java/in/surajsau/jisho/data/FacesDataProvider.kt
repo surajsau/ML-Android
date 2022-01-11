@@ -22,11 +22,17 @@ class FacesDataProviderImpl @Inject constructor(private val dao: FacesDAO) : Fac
         val face = FaceImage(isPrimary = isPrimary, faceName = faceName, fileName = fileName)
         dao.saveFace(face)
     }
+
+    override suspend fun getFaceNames(): List<String> {
+        return dao.getFaceNames()
+    }
 }
 
 interface FacesDataProvider {
 
     suspend fun saveFace(faceName: String, fileName: String, isPrimary: Boolean)
+
+    suspend fun getFaceNames(): List<String>
 
     fun getAllImages(isPrimary: Boolean): Flow<List<FaceImage>>
 
