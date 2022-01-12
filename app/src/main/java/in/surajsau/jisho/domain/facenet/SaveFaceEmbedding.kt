@@ -1,7 +1,7 @@
 package `in`.surajsau.jisho.domain.facenet
 
-import `in`.surajsau.jisho.data.FaceRecognitionProvider
 import `in`.surajsau.jisho.data.FileProvider
+import `in`.surajsau.jisho.data.facenet.FaceRecognitionProvider
 import javax.inject.Inject
 
 class SaveFaceEmbedding @Inject constructor(

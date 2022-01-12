@@ -6,7 +6,7 @@ import androidx.room.RoomDatabase
 @Database(entities = [FaceImage::class], version = AppDb.VERSION)
 abstract class AppDb: RoomDatabase() {
 
-    abstract fun faceDao(): FacesDAO
+    abstract fun faceDao(): FacenetDAO
 
     companion object {
         const val FILE_NAME = "_ml_android_"

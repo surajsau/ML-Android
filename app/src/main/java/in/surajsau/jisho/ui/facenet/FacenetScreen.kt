@@ -14,18 +14,19 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.Button
 import androidx.compose.material.CircularProgressIndicator
+import androidx.compose.material.Icon
 import androidx.compose.material.Text
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
 import coil.compose.rememberImagePainter
 import java.io.File
 
@@ -35,8 +36,12 @@ fun FacenetScreen(modifier: Modifier = Modifier) {
     val (state, event) = use(viewModel = LocalFacenetViewModel.current)
 
     ObserveLifecycle {
-        if (it == Lifecycle.Event.ON_STOP)
-            event(FacenetViewModel.Event.Close)
+        when (it) {
+            Lifecycle.Event.ON_STOP -> event(FacenetViewModel.Event.Close)
+            Lifecycle.Event.ON_START -> event(FacenetViewModel.Event.Initiate)
+
+            else -> { /* do nothing */ }
+        }
     }
 
     Box(modifier = modifier) {
@@ -46,15 +51,12 @@ fun FacenetScreen(modifier: Modifier = Modifier) {
                 AskPermissionScreen(
                     modifier = modifier,
                     permission = Manifest.permission.CAMERA,
-                    onDismiss = { event(FacenetViewModel.Event.CameraPermissionDenied) }
+                    onDismiss = { /* do nothing */ }
                 ) {
                     CameraScreen(
                         modifier = Modifier.fillMaxSize(),
                         onImageCaptured = {
-                            event(FacenetViewModel.Event.CameraResultReceived(
-                                screenMode = state.screenMode,
-                                fileName = it
-                            ))
+                            event(FacenetViewModel.Event.CameraResultReceived(fileName = it))
                         }
                     )
                 }
@@ -62,6 +64,7 @@ fun FacenetScreen(modifier: Modifier = Modifier) {
 
             FacenetViewModel.ScreenMode.Gallery -> {
                 Column(modifier = Modifier.fillMaxSize()) {
+                    // Faces
                     LazyRow(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -84,6 +87,7 @@ fun FacenetScreen(modifier: Modifier = Modifier) {
                         }
                     }
 
+                    // Images
                     LazyColumn(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -115,28 +119,21 @@ fun FacenetScreen(modifier: Modifier = Modifier) {
                     }
 
                     Button(
-                        onClick = { event(FacenetViewModel.Event.AddNewFaceClicked) },
+                        onClick = { event(FacenetViewModel.Event.OpenCameraClicked) },
                         modifier = Modifier
-                            .align(Alignment.CenterHorizontally)
-                            .padding(24.dp)
+                            .padding(16.dp)
+                            .align(Alignment.End)
+                            .size(48.dp),
+                        shape = CircleShape
                     ) {
-                        Text(text = "Add a new Face")
-                    }
-
-                    Button(
-                        onClick = { event(FacenetViewModel.Event.ClassifyFaceClicked) },
-                        modifier = Modifier
-                            .align(Alignment.CenterHorizontally)
-                            .padding(24.dp)
-                    ) {
-                        Text(text = "Classify Face")
+                        Icon(imageVector = Icons.Filled.Add, contentDescription = null)
                     }
                 }
             }
 
             FacenetViewModel.ScreenMode.Empty -> {
                 Button(
-                    onClick = { event(FacenetViewModel.Event.AddNewFaceClicked) },
+                    onClick = { event(FacenetViewModel.Event.OpenCameraClicked) },
                     modifier = Modifier.align(Alignment.Center)
                 ) {
                     Text(text = "Add a new Face")
@@ -153,25 +150,17 @@ fun FacenetScreen(modifier: Modifier = Modifier) {
         }
     }
 
-    when (val mode = state.imageDialogMode) {
-        is FacenetViewModel.ImageDialogMode.ShowAddFace -> {
-            AddFaceDialog(
-                filePath = mode.faceFilePath,
-                onNameAdded = { event(FacenetViewModel.Event.FaceNameReceived(
-                    faceFileName = mode.faceFileName,
-                    imageFileName = mode.imageFileName,
-                    faceName = it
+    when (val dialog = state.checkFaceDialog) {
+        is FacenetViewModel.CheckFaceDialog.Show -> {
+            CheckFaceDialog(
+                results = dialog.recognitionResults,
+                onNameConfirmed = { isNewFace, faceFileName, name -> event(FacenetViewModel.Event.FaceConfirmed(
+                    imageFileName = dialog.imageFileName,
+                    faceFileName = faceFileName,
+                    faceName = name,
+                    isNewFace = isNewFace,
                 )) },
-                onDismiss = { event(FacenetViewModel.Event.DismissImageDialog) }
-            )
-        }
-
-        is FacenetViewModel.ImageDialogMode.ShowRecogniseFace -> {
-            RecogniseFaceDialog(
-                filePath = mode.filePath,
-                estimatedName = mode.estimatedName,
-                onNameFinalised = {},
-                onDismiss = { event(FacenetViewModel.Event.DismissImageDialog) }
+                onDismiss = { event(FacenetViewModel.Event.DismissCheckFaceDialog) }
             )
         }
 

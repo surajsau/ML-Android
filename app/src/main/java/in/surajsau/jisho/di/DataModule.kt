@@ -4,6 +4,7 @@ import `in`.surajsau.jisho.data.*
 import `in`.surajsau.jisho.data.chat.ChatProvider
 import `in`.surajsau.jisho.data.chat.ChatProviderImpl
 import `in`.surajsau.jisho.data.db.AppDb
+import `in`.surajsau.jisho.data.facenet.*
 import `in`.surajsau.jisho.data.gpt.BpeTokenProvider
 import `in`.surajsau.jisho.data.gpt.GPTEncoderProvider
 import `in`.surajsau.jisho.data.gpt.GPTProvider

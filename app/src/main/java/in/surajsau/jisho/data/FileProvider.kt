@@ -121,26 +121,37 @@ class FileProviderImpl @Inject constructor(private val context: Context): FilePr
         runCatching {
             val os = context.contentResolver.openOutputStream(uri) ?: throw Exception("Couldn't open OutpuStream")
             val osw = OutputStreamWriter(os)
-            osw.write(string)
+            val bw = BufferedWriter(osw)
+            bw.newLine()
+            bw.write(string)
+
+            bw.close()
             osw.close()
             os.close()
         }.onFailure { throw it }
     }
 
-    override suspend fun readStringFromFile(folderName: String, fileName: String): String {
+    override suspend fun readStringFromFile(folderName: String, fileName: String): List<String> {
         val storageFolder = File(context.filesDir, folderName)
 
         if (!storageFolder.exists())
             storageFolder.mkdirs()
 
         val file = File(storageFolder, fileName)
-        var result: String = ""
+        val result = mutableListOf<String>()
 
         runCatching {
             val br = BufferedReader(FileReader(file))
-            result = br.readLine()
+            var line = br.readLine()
+            while(line != null) {
+                result.add(line)
+                line = br.readLine()
+            }
             br.close()
-        }.onFailure { throw it }
+        }.onFailure {
+            it.printStackTrace()
+            return emptyList()
+        }
 
         return result
     }
@@ -168,7 +179,7 @@ interface FileProvider {
 
     suspend fun writeStringToFile(folderName: String, fileName: String, string: String)
 
-    suspend fun readStringFromFile(folderName: String, fileName: String): String
+    suspend fun readStringFromFile(folderName: String, fileName: String): List<String>
 
     companion object {
         const val FACENET_IMAGE_FOLDER = "images/faces/"
