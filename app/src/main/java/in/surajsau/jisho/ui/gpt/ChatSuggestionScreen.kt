@@ -41,7 +41,7 @@ fun ChatSuggestionScreen(
     navigateBack: () -> Unit,
 ) {
 
-    val (state, event) = use(viewModel = LocalChatSuggestionViewModel.current)
+    val (state, event) = use(viewModel = LocalChatSuggestionViewModel.current, ChatSuggestionViewModel.State())
 
     Column(modifier = modifier) {
 

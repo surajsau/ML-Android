@@ -34,7 +34,7 @@ fun HomeScreen(
     navigateToDestination: (Destinations) -> Unit
 ) {
 
-    val (state, _) = use(LocalHomeViewModel.current)
+    val (state, _) = use(LocalHomeViewModel.current, HomeViewModel.State())
 
     Box(modifier = modifier) {
         LazyColumn(

@@ -33,7 +33,7 @@ import java.io.File
 @Composable
 fun FacenetScreen(modifier: Modifier = Modifier) {
 
-    val (state, event) = use(viewModel = LocalFacenetViewModel.current)
+    val (state, event) = use(viewModel = LocalFacenetViewModel.current, FacenetViewModel.State())
 
     ObserveLifecycle {
         when (it) {

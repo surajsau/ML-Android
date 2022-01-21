@@ -29,7 +29,7 @@ fun DigitalInkScreen(
 
     val lifecycleOwner = LocalLifecycleOwner.current
 
-    val (state, event) = use(LocalDigitalInkViewModel.current)
+    val (state, event) = use(LocalDigitalInkViewModel.current, DigitalInkViewModel.State())
 
     DisposableEffect(Unit) {
         val lifecycleObserver = LifecycleEventObserver { _, event ->
