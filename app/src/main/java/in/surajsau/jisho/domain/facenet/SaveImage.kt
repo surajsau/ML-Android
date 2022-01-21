@@ -1,7 +1,7 @@
 package `in`.surajsau.jisho.domain.facenet
 
-import `in`.surajsau.jisho.data.FacesDataProvider
 import `in`.surajsau.jisho.data.FileProvider
+import `in`.surajsau.jisho.data.facenet.FacesDataProvider
 import javax.inject.Inject
 
 class SaveImage @Inject constructor(

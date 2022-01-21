@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import org.tensorflow.lite.Interpreter
 import java.io.*
+import java.lang.StringBuilder
 import java.nio.channels.FileChannel
 import javax.inject.Inject
 
@@ -108,22 +109,51 @@ class FileProviderImpl @Inject constructor(private val context: Context): FilePr
             }
         }.onFailure { it.printStackTrace() }
 
-    override suspend fun saveEmbeddings(folderName: String, fileName: String, embedding: FloatArray) {
+    override suspend fun writeStringToFile(folderName: String, fileName: String, string: String) {
         val storageFolder = File(context.filesDir, folderName)
 
         if (!storageFolder.exists())
             storageFolder.mkdirs()
 
-        val imageFile = File(storageFolder, fileName)
+        val file = File(storageFolder, fileName)
 
-        val uri = context.getUriForFile(imageFile)
+        val uri = context.getUriForFile(file)
         runCatching {
             val os = context.contentResolver.openOutputStream(uri) ?: throw Exception("Couldn't open OutpuStream")
             val osw = OutputStreamWriter(os)
-            osw.write(embedding.joinToString())
+            val bw = BufferedWriter(osw)
+            bw.newLine()
+            bw.write(string)
+
+            bw.close()
             osw.close()
             os.close()
         }.onFailure { throw it }
+    }
+
+    override suspend fun readStringFromFile(folderName: String, fileName: String): List<String> {
+        val storageFolder = File(context.filesDir, folderName)
+
+        if (!storageFolder.exists())
+            storageFolder.mkdirs()
+
+        val file = File(storageFolder, fileName)
+        val result = mutableListOf<String>()
+
+        runCatching {
+            val br = BufferedReader(FileReader(file))
+            var line = br.readLine()
+            while(line != null) {
+                result.add(line)
+                line = br.readLine()
+            }
+            br.close()
+        }.onFailure {
+            it.printStackTrace()
+            return emptyList()
+        }
+
+        return result
     }
 }
 
@@ -147,10 +177,11 @@ interface FileProvider {
 
     fun getFilePath(folderName: String, fileName: String): String
 
-    suspend fun saveEmbeddings(folderName: String, fileName: String, embedding: FloatArray)
+    suspend fun writeStringToFile(folderName: String, fileName: String, string: String)
+
+    suspend fun readStringFromFile(folderName: String, fileName: String): List<String>
 
     companion object {
         const val FACENET_IMAGE_FOLDER = "images/faces/"
-        const val FACENET_EMBEDDINGS_FOLDER = "embeddings/faces/"
     }
 }

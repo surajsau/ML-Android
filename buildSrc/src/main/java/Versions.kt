@@ -11,6 +11,10 @@ object Dep {
             const val Activity = "1.3.1"
         }
 
+        object AndroidX {
+            const val LifeCycle = "2.4.0"
+        }
+
         const val Hilt = "2.38.1"
         const val HiltAndroid = "1.0.0-alpha03"
 
@@ -62,7 +66,7 @@ object Dep {
         const val Core = "androidx.core:core-ktx:1.6.0"
         const val AppCompat = "androidx.appcompat:appcompat:1.3.1"
         const val Material = "com.google.android.material:material:1.4.0"
-        const val Lifeycycle = "androidx.lifecycle:lifecycle-runtime-ktx:2.3.1"
+        const val Lifeycycle = "androidx.lifecycle:lifecycle-runtime-ktx:${Versions.AndroidX.LifeCycle}"
         const val Work = "androidx.work:work-runtime-ktx:${Versions.Work}"
     }
 

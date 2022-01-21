@@ -19,7 +19,7 @@ fun StyleTransferScreen(
     navigateToSettings: () -> Unit,
 ) {
 
-    val (state, event) = use(LocalStyleTransferViewModel.current)
+    val (state, event) = use(LocalStyleTransferViewModel.current, StyleTransferViewModel.State())
 
     val lifecycleOwner = LocalLifecycleOwner.current
 
