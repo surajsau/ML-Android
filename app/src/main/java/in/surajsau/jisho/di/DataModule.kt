@@ -3,11 +3,13 @@ package `in`.surajsau.jisho.di
 import `in`.surajsau.jisho.data.*
 import `in`.surajsau.jisho.data.chat.ChatProvider
 import `in`.surajsau.jisho.data.chat.ChatProviderImpl
+import `in`.surajsau.jisho.data.db.AppDb
 import `in`.surajsau.jisho.data.gpt.BpeTokenProvider
 import `in`.surajsau.jisho.data.gpt.GPTEncoderProvider
 import `in`.surajsau.jisho.data.gpt.GPTProvider
 import `in`.surajsau.jisho.data.gpt.GPTProviderImpl
 import android.content.Context
+import androidx.room.Room
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
@@ -34,6 +36,9 @@ abstract class DataModule {
     @Binds
     abstract fun bindGptProvider(provider: GPTProviderImpl): GPTProvider
 
+    @Binds
+    abstract fun bindFaceDetectionProvider(provider: FaceDetectionProviderImpl): FaceDetectionProvider
+
     companion object {
 
         @Provides
@@ -42,6 +47,18 @@ abstract class DataModule {
         @Provides
         fun provideStyleTransfer(@ApplicationContext context: Context): StyleTransferProvider
             = StyleTransferProviderImpl(context)
+
+        @Provides
+        fun provideDb(@ApplicationContext context: Context): AppDb = Room
+            .databaseBuilder(context, AppDb::class.java, AppDb.FILE_NAME)
+            .build()
+
+        @Provides
+        fun provideFacesProvider(appDb: AppDb): FacesDataProvider = FacesDataProviderImpl(appDb.faceDao())
+
+        @Provides
+        fun proviceFaceRecognitionProvider(@ApplicationContext context: Context): FaceRecognitionProvider
+            = FaceRecognitionProviderImpl(context)
 
         @Provides
         fun provideGPTEncoderProvider(fileProvider: FileProvider) = GPTEncoderProvider(fileProvider)

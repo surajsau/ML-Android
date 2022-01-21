@@ -5,6 +5,9 @@ import `in`.surajsau.jisho.base.LocalBitmapCache
 import `in`.surajsau.jisho.ui.digitalink.DigitalInkScreen
 import `in`.surajsau.jisho.ui.digitalink.DigitalInkViewModelImpl
 import `in`.surajsau.jisho.ui.digitalink.LocalDigitalInkViewModel
+import `in`.surajsau.jisho.ui.facenet.FacenetScreen
+import `in`.surajsau.jisho.ui.facenet.FacenetViewModelImpl
+import `in`.surajsau.jisho.ui.facenet.LocalFacenetViewModel
 import `in`.surajsau.jisho.ui.gpt.ChatSuggestionScreen
 import `in`.surajsau.jisho.ui.gpt.ChatSuggestionViewModelImpl
 import `in`.surajsau.jisho.ui.gpt.LocalChatSuggestionViewModel
@@ -78,6 +81,14 @@ fun MLApp(
                             modifier = Modifier.fillMaxSize(),
                             navigateBack = { navController.popBackStack() }
                         )
+                    }
+                }
+
+                composable(route = Destinations.Facenet.value) {
+                    CompositionLocalProvider(
+                        LocalFacenetViewModel provides hiltViewModel<FacenetViewModelImpl>()
+                    ) {
+                        FacenetScreen(modifier = Modifier.fillMaxSize())
                     }
                 }
             }

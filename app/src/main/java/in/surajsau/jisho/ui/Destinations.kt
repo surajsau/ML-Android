@@ -5,5 +5,6 @@ enum class Destinations(val value: String) {
 
     DigitalInk("digital_ink"),
     StyleTransfer("style_transfer"),
-    Gpt("gpt")
+    Gpt("gpt"),
+    Facenet("facenet"),
 }

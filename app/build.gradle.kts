@@ -87,12 +87,17 @@ dependencies {
 
     implementation(Dep.MLKit.DigitalInk)
     implementation(Dep.MLKit.Translation)
+    implementation(Dep.MLKit.FaceDetection)
 
     implementation(Dep.Retrofit.Core)
     implementation(Dep.Retrofit.GsonConverter)
 
     implementation(Dep.Coil.Compose)
     implementation(Dep.Coil.Gif)
+
+    implementation(Dep.Room.Core)
+    implementation(Dep.Room.Ktx)
+    kapt(Dep.Room.Compiler)
 
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.3")

@@ -36,8 +36,11 @@ object Dep {
 
         const val DigitalInk = "17.0.0"
         const val Translation = "16.1.2"
+        const val FaceDetection = "16.1.3"
 
         const val CameraX = "1.0.1"
+
+        const val Room = "2.4.0"
     }
 
     object Compose {
@@ -118,12 +121,19 @@ object Dep {
         const val View = "androidx.camera:camera-view:1.0.0-alpha27"
     }
 
+    object Room {
+        const val Core = "androidx.room:room-runtime:${Versions.Room}"
+        const val Ktx = "androidx.room:room-ktx:${Versions.Room}"
+        const val Compiler = "androidx.room:room-compiler:${Versions.Room}"
+    }
+
     const val Gson = "com.google.code.gson:gson:${Versions.Gson}"
 
     const val Coroutines = "org.jetbrains.kotlinx:kotlinx-coroutines-android:${Versions.Coroutines}"
 
     object MLKit {
         const val Translation = "com.google.mlkit:translate:${Versions.Translation}"
+        const val FaceDetection = "com.google.mlkit:face-detection:${Versions.FaceDetection}"
         const val DigitalInk = "com.google.mlkit:digital-ink-recognition:${Versions.DigitalInk}"
     }
 }
