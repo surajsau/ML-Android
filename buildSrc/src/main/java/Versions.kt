@@ -38,13 +38,18 @@ object Dep {
 
         const val Glide = "4.12.0"
 
-        const val DigitalInk = "17.0.0"
-        const val Translation = "16.1.2"
-        const val FaceDetection = "16.1.3"
+        object MLKit {
+            const val DigitalInk = "17.0.0"
+            const val Translation = "16.1.2"
+            const val FaceDetection = "16.1.3"
+            const val TextRecognition = "17.0.1"
+        }
 
         const val CameraX = "1.0.1"
 
         const val Room = "2.4.0"
+
+        const val Arrow = "1.0.1"
     }
 
     object Compose {
@@ -135,10 +140,13 @@ object Dep {
 
     const val Coroutines = "org.jetbrains.kotlinx:kotlinx-coroutines-android:${Versions.Coroutines}"
 
+    const val ArrowKt = "io.arrow-kt:arrow-core:${Versions.Arrow}"
+
     object MLKit {
-        const val Translation = "com.google.mlkit:translate:${Versions.Translation}"
-        const val FaceDetection = "com.google.mlkit:face-detection:${Versions.FaceDetection}"
-        const val DigitalInk = "com.google.mlkit:digital-ink-recognition:${Versions.DigitalInk}"
+        const val Translation = "com.google.mlkit:translate:${Versions.MLKit.Translation}"
+        const val FaceDetection = "com.google.mlkit:face-detection:${Versions.MLKit.FaceDetection}"
+        const val DigitalInk = "com.google.mlkit:digital-ink-recognition:${Versions.MLKit.DigitalInk}"
+        const val TextRecognition = "com.google.android.gms:play-services-mlkit-text-recognition:${Versions.MLKit.TextRecognition}"
     }
 }
 

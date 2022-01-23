@@ -64,9 +64,7 @@ fun CameraScreen(
         )
 
         CameraControls(
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f),
+            modifier = Modifier.fillMaxWidth(),
             onCameraAction = {
                 when (it) {
                     is CameraAction.Click -> {

@@ -88,6 +88,7 @@ dependencies {
     implementation(Dep.MLKit.DigitalInk)
     implementation(Dep.MLKit.Translation)
     implementation(Dep.MLKit.FaceDetection)
+    implementation(Dep.MLKit.TextRecognition)
 
     implementation(Dep.Retrofit.Core)
     implementation(Dep.Retrofit.GsonConverter)

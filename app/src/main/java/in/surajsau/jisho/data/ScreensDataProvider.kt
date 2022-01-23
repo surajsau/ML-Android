@@ -41,6 +41,14 @@ class ScreensDataProviderImpl @Inject constructor(): ScreensDataProvider {
                     description = "Using MLKit's FaceDetection to crop out face and using Sirius-AI's MobileFacenet tflite for recognition",
                     tags = listOf("MLKit", "TFLite")
                 ),
+
+                Screen(
+                    destinations = Destinations.CardReader,
+                    previewImage = "",
+                    title = "Card Reader",
+                    description = "Using MLKit's Text Recognition",
+                    tags = listOf("MLKit")
+                )
             )
         )
     }
