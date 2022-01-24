@@ -2,7 +2,6 @@ package `in`.surajsau.jisho.ui.styletransfer
 
 import `in`.surajsau.jisho.base.use
 import `in`.surajsau.jisho.ui.base.AskPermissionScreen
-import `in`.surajsau.jisho.ui.base.CameraScreen
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.*
