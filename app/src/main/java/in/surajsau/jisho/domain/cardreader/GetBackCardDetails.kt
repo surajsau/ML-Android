@@ -30,18 +30,19 @@ class GetBackCardDetails @Inject constructor(
         = flow { emit(fileProvider.fetchCachedBitmap(fileName = fileName)) }
             .flatMapLatest { cardDataProvider.identifyTexts(it) }
             .map { textResult ->
-                Log.e("Card", textResult.text)
                 val lines = textResult.text.replace(":", "").split("\n")
 
-                val mobileNumber = lines.firstOrNull { it.startsWith("Mob. No.") }
-                    ?.split("\\s+".toRegex())
-                    ?.firstOrNull { it.matches(MobileNumberRegex) } ?: ""
+                Log.e("Card", lines.joinToString("\n"))
+
+                val mobileNumber = lines.firstOrNull { it.startsWith("Mob. No.") }?.let {
+                    return@let MobileNumberRegex.find(it)?.value
+                } ?: ""
 
                 val email = lines.firstOrNull { it.startsWith("e-mail") }
                     ?.split(" ")?.getOrNull(1) ?: ""
 
                 val address = lines.subList(
-                    fromIndex = lines.indexOfFirst { it.startsWith("Address") },
+                    fromIndex = lines.indexOfFirst { it.startsWith("Address") } + 1,
                     toIndex = lines.indexOfFirst { it.startsWith("Mob.") }
                 ).joinToString(separator = "\n")
 
@@ -53,6 +54,6 @@ class GetBackCardDetails @Inject constructor(
             }
 
     companion object {
-        private val MobileNumberRegex = Regex("(\\+91-)\\d{10}")
+        private val MobileNumberRegex = Regex("(\\+91-\\s+)\\d{10}")
     }
 }

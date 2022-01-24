@@ -83,13 +83,27 @@ fun DetailsScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
+            TextField(
+                modifier = Modifier.fillMaxWidth(),
+                value = membershipNumber,
+                onValueChange = { membershipNumber = it },
+                label = { Text(text = "Membership No.") },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
             Row(modifier = Modifier.fillMaxWidth()) {
+
                 TextField(
-                    modifier = Modifier.weight(2f),
-                    value = membershipNumber,
-                    onValueChange = { membershipNumber = it },
-                    label = { Text(text = "Membership No.") },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                    modifier = Modifier.weight(3f),
+                    value = degree,
+                    onValueChange = { degree = it },
+                    label = { Text(text = "Degree") },
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Text,
+                        capitalization = KeyboardCapitalization.Characters,
+                    ),
                 )
 
                 TextField(
@@ -100,17 +114,6 @@ fun DetailsScreen(
                     onValueChange = { year = it },
                     label = { Text(text = "Year") },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                )
-
-                TextField(
-                    modifier = Modifier.weight(1f),
-                    value = degree,
-                    onValueChange = { degree = it },
-                    label = { Text(text = "Degree") },
-                    keyboardOptions = KeyboardOptions(
-                        keyboardType = KeyboardType.Text,
-                        capitalization = KeyboardCapitalization.Characters,
-                    ),
                 )
             }
 
@@ -135,6 +138,8 @@ fun DetailsScreen(
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone)
                 )
 
+                Spacer(modifier = Modifier.width(4.dp))
+
                 TextField(
                     modifier = Modifier.weight(1f),
                     value = email,
@@ -147,7 +152,8 @@ fun DetailsScreen(
             Spacer(modifier = Modifier.height(16.dp))
 
             Button(
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
                     .padding(horizontal = 24.dp),
                 onClick = { event(CardReaderViewModel.Event.ConfirmClicked) }
             ) {

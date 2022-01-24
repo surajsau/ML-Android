@@ -40,7 +40,6 @@ class GetFrontCardDetails @Inject constructor(
             = flow { emit(fileProvider.fetchCachedBitmap(fileName = fileName)) }
         .flatMapLatest { cardDataProvider.identifyTexts(it) }
         .map { textResult ->
-            Log.e("Card", textResult.text)
             val lines = textResult
                 .text
                 .replace(":", "")
@@ -52,8 +51,13 @@ class GetFrontCardDetails @Inject constructor(
                             it.startsWith("ROORKEE") or
                             it.startsWith("Issuing") or
                             it.startsWith("Hon.") or
-                            it.startsWith("Signature")
-                }
+                            it.startsWith("Signature") or
+                            it.startsWith("Date") or
+                            it.startsWith("Degree") or
+                            it.startsWith("Name")
+                }.map { it.trim() }
+
+            Log.e("Card", lines.joinToString("\n"))
 
             val words = lines.flatMap { it.split(" ") }
 
@@ -63,9 +67,9 @@ class GetFrontCardDetails @Inject constructor(
 
             val membershipNumber = words.firstOrNull { it.isDigitsOnly() && it.length > 4 } ?: ""
 
-            val name = lines.firstOrNull { it.split(" ").size > 1 } ?: ""
+            val name = lines.firstOrNull { it.matches("[a-zA-Z\\s]+".toRegex()) and (it.split(" ").size > 1) } ?: ""
 
-            val degree = words.firstOrNull { it.matches(DegreeRegex) } ?: ""
+            val degree = lines.firstOrNull { it.matches(DegreeRegex) } ?: ""
 
             CardDetails.Front(
                 membershipNumber = membershipNumber,
@@ -78,6 +82,6 @@ class GetFrontCardDetails @Inject constructor(
 
     companion object {
         private val DateOfBirthRegex = Regex("(0[1-9]|[12][0-9]|3[01])-(0[1-9]|1[0-2])-\\d{4}")
-        private val DegreeRegex = Regex("([BM])\\.([A-Za-z]+)\\(([A-Z]+)\\)")
+        private val DegreeRegex = Regex("([BM])\\.([A-Za-z]+)\\s\\(([A-Z]+)\\)")
     }
 }
