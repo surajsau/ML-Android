@@ -4,7 +4,6 @@ import `in`.surajsau.jisho.base.ObserveLifecycle
 import `in`.surajsau.jisho.base.use
 import `in`.surajsau.jisho.domain.models.GalleryModel
 import `in`.surajsau.jisho.ui.base.AskPermissionScreen
-import `in`.surajsau.jisho.ui.base.CameraScreen
 import `in`.surajsau.jisho.ui.base.ForEachRow
 import android.Manifest
 import androidx.compose.foundation.Image
