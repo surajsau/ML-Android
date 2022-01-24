@@ -2,6 +2,10 @@ package `in`.surajsau.jisho.ui
 
 import `in`.surajsau.jisho.base.BitmapCache
 import `in`.surajsau.jisho.base.LocalBitmapCache
+import `in`.surajsau.jisho.ui.cardreader.CardReaderScreen
+import `in`.surajsau.jisho.ui.cardreader.CardReaderViewModelImpl
+import `in`.surajsau.jisho.ui.cardreader.LocalOnboardingViewModel
+import `in`.surajsau.jisho.ui.cardreader.OnBoardingScreen
 import `in`.surajsau.jisho.ui.digitalink.DigitalInkScreen
 import `in`.surajsau.jisho.ui.digitalink.DigitalInkViewModelImpl
 import `in`.surajsau.jisho.ui.digitalink.LocalDigitalInkViewModel
@@ -89,6 +93,14 @@ fun MLApp(
                         LocalFacenetViewModel provides hiltViewModel<FacenetViewModelImpl>()
                     ) {
                         FacenetScreen(modifier = Modifier.fillMaxSize())
+                    }
+                }
+
+                composable(route = Destinations.CardReader.value) {
+                    CompositionLocalProvider(
+                        LocalOnboardingViewModel provides hiltViewModel<CardReaderViewModelImpl>()
+                    ) {
+                        OnBoardingScreen(modifier = Modifier.fillMaxSize())
                     }
                 }
             }

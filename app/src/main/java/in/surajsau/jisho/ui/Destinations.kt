@@ -7,4 +7,5 @@ enum class Destinations(val value: String) {
     StyleTransfer("style_transfer"),
     Gpt("gpt"),
     Facenet("facenet"),
+    CardReader("card_reader")
 }

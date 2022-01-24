@@ -1,7 +1,7 @@
 package `in`.surajsau.jisho.ui.facenet
 
 import `in`.surajsau.jisho.base.SingleFlowViewModel
-import `in`.surajsau.jisho.data.FileProvider
+import `in`.surajsau.jisho.domain.Cleanup
 import `in`.surajsau.jisho.domain.facenet.*
 import `in`.surajsau.jisho.domain.models.FaceModel
 import `in`.surajsau.jisho.domain.models.FaceRecognitionResult

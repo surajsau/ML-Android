@@ -41,6 +41,9 @@ abstract class DataModule {
     @Binds
     abstract fun bindFaceDetectionProvider(provider: FaceDetectionProviderImpl): FaceDetectionProvider
 
+    @Binds
+    abstract fun bindCardDataProvider(provider: CardDataProviderImpl): CardDataProvider
+
     companion object {
 
         @Provides

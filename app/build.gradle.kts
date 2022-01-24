@@ -88,12 +88,15 @@ dependencies {
     implementation(Dep.MLKit.DigitalInk)
     implementation(Dep.MLKit.Translation)
     implementation(Dep.MLKit.FaceDetection)
+    implementation(Dep.MLKit.TextRecognition)
 
     implementation(Dep.Retrofit.Core)
     implementation(Dep.Retrofit.GsonConverter)
 
     implementation(Dep.Coil.Compose)
     implementation(Dep.Coil.Gif)
+
+    implementation(Dep.Klock)
 
     implementation(Dep.Room.Core)
     implementation(Dep.Room.Ktx)
