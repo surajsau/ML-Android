@@ -35,6 +35,7 @@ fun DetailsScreen(
     var address by remember { mutableStateOf("") }
     var mobileNumber by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
+    var dob by remember { mutableStateOf("") }
 
     LaunchedEffect(screen) {
         if (screen is CardReaderViewModel.Screen.FilledDetails) {
@@ -42,6 +43,7 @@ fun DetailsScreen(
             name = screen.front.name
             year = screen.front.year
             degree = screen.front.degree
+            dob = screen.front.dateOfBirth.toString()
 
             address = screen.back.address
             mobileNumber = screen.back.mobileNumber
@@ -148,6 +150,16 @@ fun DetailsScreen(
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                 )
             }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            TextField(
+                modifier = Modifier.fillMaxWidth(),
+                value = dob,
+                onValueChange = { dob = it },
+                label = { Text(text = "Date of Birth") },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            )
 
             Spacer(modifier = Modifier.height(16.dp))
 

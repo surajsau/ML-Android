@@ -50,6 +50,8 @@ object Dep {
         const val Room = "2.4.0"
 
         const val Arrow = "1.0.1"
+
+        const val Klock = "2.4.12"
     }
 
     object Compose {
@@ -141,6 +143,8 @@ object Dep {
     const val Coroutines = "org.jetbrains.kotlinx:kotlinx-coroutines-android:${Versions.Coroutines}"
 
     const val ArrowKt = "io.arrow-kt:arrow-core:${Versions.Arrow}"
+
+    const val Klock = "com.soywiz.korlibs.klock:klock:${Versions.Klock}"
 
     object MLKit {
         const val Translation = "com.google.mlkit:translate:${Versions.MLKit.Translation}"

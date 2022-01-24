@@ -96,6 +96,8 @@ dependencies {
     implementation(Dep.Coil.Compose)
     implementation(Dep.Coil.Gif)
 
+    implementation(Dep.Klock)
+
     implementation(Dep.Room.Core)
     implementation(Dep.Room.Ktx)
     kapt(Dep.Room.Compiler)
