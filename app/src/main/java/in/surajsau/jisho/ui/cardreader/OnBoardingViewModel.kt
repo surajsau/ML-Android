@@ -2,9 +2,8 @@ package `in`.surajsau.jisho.ui.cardreader
 
 import `in`.surajsau.jisho.base.Optional
 import `in`.surajsau.jisho.base.SingleFlowViewModel
-import `in`.surajsau.jisho.domain.cardreader.GetBackCardDetails
-import `in`.surajsau.jisho.domain.cardreader.GetFrontCardDetails
-import `in`.surajsau.jisho.domain.models.CardDetails
+import `in`.surajsau.jisho.domain.cardreader.GetCardDetails
+import `in`.surajsau.jisho.domain.models.IDCard
 import androidx.compose.runtime.compositionLocalOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -16,18 +15,20 @@ import javax.inject.Inject
 
 @HiltViewModel
 class CardReaderViewModelImpl @Inject constructor(
-    private val getBackCardDetails: GetBackCardDetails,
-    private val getFrontCardDetails: GetFrontCardDetails,
+    private val getFrontDetails: GetCardDetails<IDCard.Front>,
+    private val getBackDetails: GetCardDetails<IDCard.Back>,
 ): ViewModel(), CardReaderViewModel {
 
-    private val _frontDetails = MutableStateFlow<Optional<CardDetails.Front>>(Optional.Empty)
-    private val _backDetails = MutableStateFlow<Optional<CardDetails.Back>>(Optional.Empty)
+    private val _frontDetails = MutableStateFlow<Optional<IDCard.Front>>(Optional.Empty)
+    private val _backDetails = MutableStateFlow<Optional<IDCard.Back>>(Optional.Empty)
 
     private val _cardReaderMode = MutableStateFlow(CardReaderViewModel.CardReaderMode.FrontCapture)
 
     private val _currentScreen = MutableStateFlow<CardReaderViewModel.Screen>(CardReaderViewModel.Screen.Intro)
 
     private val _showLoader = MutableStateFlow(false)
+
+    private var instruction = ""
 
     override val state: StateFlow<CardReaderViewModel.State>
         get() = combine(
@@ -37,12 +38,12 @@ class CardReaderViewModelImpl @Inject constructor(
             _currentScreen,
             _showLoader,
         ) { frontDetails, backDetails, cardReaderMode, currentScreen, showLoader ->
-            val instruction = when (cardReaderMode) {
-                CardReaderViewModel.CardReaderMode.FrontCapture -> "Show front of the Card"
-                CardReaderViewModel.CardReaderMode.BackCapture -> "Show back of the Card"
-
-                else -> ""
-            }
+//            val instruction = when (cardReaderMode) {
+//                CardReaderViewModel.CardReaderMode.FrontCapture -> "Show front of the Card"
+//                CardReaderViewModel.CardReaderMode.BackCapture -> "Show back of the Card"
+//
+//                else -> ""
+//            }
 
             val screen = when (cardReaderMode) {
                 CardReaderViewModel.CardReaderMode.Result -> CardReaderViewModel.Screen.FilledDetails(
@@ -71,19 +72,19 @@ class CardReaderViewModelImpl @Inject constructor(
                 viewModelScope.launch {
                     when (cardReaderMode) {
                         CardReaderViewModel.CardReaderMode.FrontCapture -> {
-                            getFrontCardDetails.invoke(fileName = event.fileName)
+                            getFrontDetails.invoke(fileName = event.fileName)
                                 .flowOn(Dispatchers.IO)
                                 .collect {
-                                    _frontDetails.value = Optional.Some(it)
+                                    _frontDetails.value = Optional.of(it)
                                     _cardReaderMode.value = CardReaderViewModel.CardReaderMode.BackCapture
                                 }
                         }
 
                         CardReaderViewModel.CardReaderMode.BackCapture -> {
-                            getBackCardDetails.invoke(fileName = event.fileName)
+                            getBackDetails.invoke(fileName = event.fileName)
                                 .flowOn(Dispatchers.IO)
                                 .collect {
-                                    _backDetails.value = Optional.Some(it)
+                                    _backDetails.value = Optional.of(it)
                                     _cardReaderMode.value = CardReaderViewModel.CardReaderMode.Result
                                 }
                         }
@@ -129,8 +130,8 @@ interface CardReaderViewModel : SingleFlowViewModel<CardReaderViewModel.Event, C
         object CardReader: Screen("")
         object EmptyDetails: Screen("Enter details")
         data class FilledDetails(
-            val front: CardDetails.Front,
-            val back: CardDetails.Back,
+            val front: IDCard.Front,
+            val back: IDCard.Back,
         ): Screen("Confirm details")
     }
 }

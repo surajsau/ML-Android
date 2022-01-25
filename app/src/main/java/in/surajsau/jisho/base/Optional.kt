@@ -11,4 +11,13 @@ sealed class Optional<out T> {
         }
         return (this as? Some<T>)?.data!!
     }
+
+    companion object {
+
+        fun <T> of(value: T?): Optional<T> {
+            if (value == null)
+                return Empty
+            return Some(data = value)
+        }
+    }
 }

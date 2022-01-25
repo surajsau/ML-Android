@@ -42,7 +42,7 @@ object Dep {
             const val DigitalInk = "17.0.0"
             const val Translation = "16.1.2"
             const val FaceDetection = "16.1.3"
-            const val TextRecognition = "17.0.1"
+            const val TextRecognition = "16.0.0-beta2"
         }
 
         const val CameraX = "1.0.1"
@@ -150,7 +150,10 @@ object Dep {
         const val Translation = "com.google.mlkit:translate:${Versions.MLKit.Translation}"
         const val FaceDetection = "com.google.mlkit:face-detection:${Versions.MLKit.FaceDetection}"
         const val DigitalInk = "com.google.mlkit:digital-ink-recognition:${Versions.MLKit.DigitalInk}"
-        const val TextRecognition = "com.google.android.gms:play-services-mlkit-text-recognition:${Versions.MLKit.TextRecognition}"
+        const val TextRecognition = "com.google.mlkit:text-recognition:${Versions.MLKit.TextRecognition}"
+
+        const val TextRecognitionJp = "com.google.mlkit:text-recognition-japanese:${Versions.MLKit.TextRecognition}"
+        const val TextRecognitionDev = "com.google.mlkit:text-recognition-devanagari:${Versions.MLKit.TextRecognition}"
     }
 }
 
