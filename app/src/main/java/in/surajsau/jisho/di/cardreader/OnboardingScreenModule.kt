@@ -5,12 +5,11 @@ import `in`.surajsau.jisho.data.FileProvider
 import `in`.surajsau.jisho.domain.cardreader.GetCardDetails
 import `in`.surajsau.jisho.domain.cardreader.processor.IDCardBackProcessor
 import `in`.surajsau.jisho.domain.cardreader.processor.IDCardFrontProcessor
-import `in`.surajsau.jisho.domain.models.CardDetails
+import `in`.surajsau.jisho.domain.models.IDCard
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
-import javax.inject.Qualifier
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -22,7 +21,7 @@ abstract class OnboardingScreenModule {
         fun provideGetCardFrontDetails(
             fileProvider: FileProvider,
             cardDataProvider: CardDataProvider
-        ): GetCardDetails<CardDetails.Front> {
+        ): GetCardDetails<IDCard.Front> {
             return GetCardDetails(
                 textProcessor = IDCardFrontProcessor(),
                 fileProvider = fileProvider,
@@ -34,7 +33,7 @@ abstract class OnboardingScreenModule {
         fun provideGetCardBackDetails(
             fileProvider: FileProvider,
             cardDataProvider: CardDataProvider
-        ): GetCardDetails<CardDetails.Back> {
+        ): GetCardDetails<IDCard.Back> {
             return GetCardDetails(
                 textProcessor = IDCardBackProcessor(),
                 fileProvider = fileProvider,

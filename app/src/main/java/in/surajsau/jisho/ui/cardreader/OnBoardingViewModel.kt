@@ -3,7 +3,7 @@ package `in`.surajsau.jisho.ui.cardreader
 import `in`.surajsau.jisho.base.Optional
 import `in`.surajsau.jisho.base.SingleFlowViewModel
 import `in`.surajsau.jisho.domain.cardreader.GetCardDetails
-import `in`.surajsau.jisho.domain.models.CardDetails
+import `in`.surajsau.jisho.domain.models.IDCard
 import androidx.compose.runtime.compositionLocalOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -15,12 +15,12 @@ import javax.inject.Inject
 
 @HiltViewModel
 class CardReaderViewModelImpl @Inject constructor(
-    private val getFrontDetails: GetCardDetails<CardDetails.Front>,
-    private val getBackDetails: GetCardDetails<CardDetails.Back>,
+    private val getFrontDetails: GetCardDetails<IDCard.Front>,
+    private val getBackDetails: GetCardDetails<IDCard.Back>,
 ): ViewModel(), CardReaderViewModel {
 
-    private val _frontDetails = MutableStateFlow<Optional<CardDetails.Front>>(Optional.Empty)
-    private val _backDetails = MutableStateFlow<Optional<CardDetails.Back>>(Optional.Empty)
+    private val _frontDetails = MutableStateFlow<Optional<IDCard.Front>>(Optional.Empty)
+    private val _backDetails = MutableStateFlow<Optional<IDCard.Back>>(Optional.Empty)
 
     private val _cardReaderMode = MutableStateFlow(CardReaderViewModel.CardReaderMode.FrontCapture)
 
@@ -128,8 +128,8 @@ interface CardReaderViewModel : SingleFlowViewModel<CardReaderViewModel.Event, C
         object CardReader: Screen("")
         object EmptyDetails: Screen("Enter details")
         data class FilledDetails(
-            val front: CardDetails.Front,
-            val back: CardDetails.Back,
+            val front: IDCard.Front,
+            val back: IDCard.Back,
         ): Screen("Confirm details")
     }
 }

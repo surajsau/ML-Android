@@ -1,7 +1,7 @@
 package `in`.surajsau.jisho.domain.cardreader.processor
 
 import `in`.surajsau.jisho.base.Optional
-import `in`.surajsau.jisho.domain.models.CardDetails
+import `in`.surajsau.jisho.domain.models.IDCard
 import android.util.Log
 import android.util.Patterns
 import com.google.mlkit.vision.text.Text
@@ -18,9 +18,9 @@ import com.google.mlkit.vision.text.Text
     2015010006
 */
 
-class IDCardBackProcessor : TextProcessor<CardDetails.Back> {
+class IDCardBackProcessor : TextProcessor<IDCard.Back> {
 
-    override fun process(textResult: Text): CardDetails.Back {
+    override fun process(textResult: Text): IDCard.Back {
         val lines = textResult.text.replace(":", "").split("\n")
 
         Log.e("Card", lines.joinToString("\n"))
@@ -38,7 +38,7 @@ class IDCardBackProcessor : TextProcessor<CardDetails.Back> {
             toIndex = lines.indexOfFirst { it.startsWith("Mob.") }
         ).joinToString(separator = "\n")
 
-        return CardDetails.Back(
+        return IDCard.Back(
             address = address,
             mobileNumber = mobileNumber.getValue(),
             email = email.getValue()

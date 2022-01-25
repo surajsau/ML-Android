@@ -1,6 +1,6 @@
 package `in`.surajsau.jisho.domain.cardreader.processor
 
-import `in`.surajsau.jisho.domain.models.CardDetails
+import `in`.surajsau.jisho.domain.models.IDCard
 import android.util.Log
 import androidx.core.text.isDigitsOnly
 import com.google.mlkit.vision.text.Text
@@ -28,9 +28,9 @@ import com.soywiz.klock.parseDate
 
  */
 
-class IDCardFrontProcessor: TextProcessor<CardDetails.Front> {
+class IDCardFrontProcessor: TextProcessor<IDCard.Front> {
 
-    override fun process(textResult: Text): CardDetails.Front {
+    override fun process(textResult: Text): IDCard.Front {
         val lines = textResult
             .text
             .replace(":", "")
@@ -62,7 +62,7 @@ class IDCardFrontProcessor: TextProcessor<CardDetails.Front> {
 
         val degree = lines.firstOrNull { it.matches(DegreeRegex) } ?: ""
 
-        return CardDetails.Front(
+        return IDCard.Front(
             membershipNumber = membershipNumber,
             name = name,
             year = year,
