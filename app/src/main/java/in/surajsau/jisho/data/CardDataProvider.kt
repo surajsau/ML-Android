@@ -1,6 +1,7 @@
 package `in`.surajsau.jisho.data
 
 import android.graphics.Bitmap
+import android.util.Log
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.text.Text
 import com.google.mlkit.vision.text.TextRecognition
@@ -16,7 +17,7 @@ class CardDataProviderImpl @Inject constructor(): CardDataProvider {
         TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
     }
 
-    override suspend fun identifyTexts(bitmap: Bitmap): Flow<Text> = callbackFlow {
+    override fun identifyTexts(bitmap: Bitmap): Flow<Text> = callbackFlow {
         val image = InputImage.fromBitmap(bitmap, 0)
         recognizer.process(image)
             .addOnSuccessListener { trySend(it) }
@@ -32,5 +33,5 @@ class CardDataProviderImpl @Inject constructor(): CardDataProvider {
 
 interface CardDataProvider {
 
-    suspend fun identifyTexts(bitmap: Bitmap): Flow<Text>
+    fun identifyTexts(bitmap: Bitmap): Flow<Text>
 }

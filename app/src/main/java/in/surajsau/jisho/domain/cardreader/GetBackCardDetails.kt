@@ -1,9 +1,11 @@
 package `in`.surajsau.jisho.domain.cardreader
 
+import `in`.surajsau.jisho.base.Optional
 import `in`.surajsau.jisho.data.CardDataProvider
 import `in`.surajsau.jisho.data.FileProvider
 import `in`.surajsau.jisho.domain.models.CardDetails
 import android.util.Log
+import android.util.Patterns
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
@@ -34,12 +36,17 @@ class GetBackCardDetails @Inject constructor(
 
                 Log.e("Card", lines.joinToString("\n"))
 
-                val mobileNumber = lines.firstOrNull { it.startsWith("Mob. No.") }?.let {
-                    return@let MobileNumberRegex.find(it)?.value
-                } ?: ""
+//                val mobileNumber = lines.firstOrNull { it.startsWith("Mob. No.") }?.let {
+//                    return@let MobileNumberRegex.find(it)?.value
+//                } ?: ""
 
-                val email = lines.firstOrNull { it.startsWith("e-mail") }
-                    ?.split(" ")?.getOrNull(1) ?: ""
+                val mobileNumber = lines
+                    .map { Optional.of(MobileNumberRegex.find(it)?.value) }
+                    .first { it !is Optional.Empty }
+
+                val email = lines
+                    .map { Optional.of(EmailRegex.find(it)?.value) }
+                    .first { it !is Optional.Empty }
 
                 val address = lines.subList(
                     fromIndex = lines.indexOfFirst { it.startsWith("Address") } + 1,
@@ -48,12 +55,13 @@ class GetBackCardDetails @Inject constructor(
 
                 CardDetails.Back(
                     address = address,
-                    mobileNumber = mobileNumber,
-                    email = email
+                    mobileNumber = mobileNumber.getValue(),
+                    email = email.getValue()
                 )
             }
 
     companion object {
         private val MobileNumberRegex = Regex("(\\+91-\\s+)\\d{10}")
+        private val EmailRegex = Patterns.EMAIL_ADDRESS.pattern().toRegex()
     }
 }
