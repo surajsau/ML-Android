@@ -2,8 +2,7 @@ package `in`.surajsau.jisho.ui.cardreader
 
 import `in`.surajsau.jisho.base.Optional
 import `in`.surajsau.jisho.base.SingleFlowViewModel
-import `in`.surajsau.jisho.domain.cardreader.GetBackCardDetails
-import `in`.surajsau.jisho.domain.cardreader.GetFrontCardDetails
+import `in`.surajsau.jisho.domain.cardreader.GetCardDetails
 import `in`.surajsau.jisho.domain.models.CardDetails
 import androidx.compose.runtime.compositionLocalOf
 import androidx.lifecycle.ViewModel
@@ -16,8 +15,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class CardReaderViewModelImpl @Inject constructor(
-    private val getBackCardDetails: GetBackCardDetails,
-    private val getFrontCardDetails: GetFrontCardDetails,
+    private val getFrontDetails: GetCardDetails<CardDetails.Front>,
+    private val getBackDetails: GetCardDetails<CardDetails.Back>,
 ): ViewModel(), CardReaderViewModel {
 
     private val _frontDetails = MutableStateFlow<Optional<CardDetails.Front>>(Optional.Empty)
@@ -71,19 +70,19 @@ class CardReaderViewModelImpl @Inject constructor(
                 viewModelScope.launch {
                     when (cardReaderMode) {
                         CardReaderViewModel.CardReaderMode.FrontCapture -> {
-                            getFrontCardDetails.invoke(fileName = event.fileName)
+                            getFrontDetails.invoke(fileName = event.fileName)
                                 .flowOn(Dispatchers.IO)
                                 .collect {
-                                    _frontDetails.value = Optional.Some(it)
+                                    _frontDetails.value = Optional.of(it)
                                     _cardReaderMode.value = CardReaderViewModel.CardReaderMode.BackCapture
                                 }
                         }
 
                         CardReaderViewModel.CardReaderMode.BackCapture -> {
-                            getBackCardDetails.invoke(fileName = event.fileName)
+                            getBackDetails.invoke(fileName = event.fileName)
                                 .flowOn(Dispatchers.IO)
                                 .collect {
-                                    _backDetails.value = Optional.Some(it)
+                                    _backDetails.value = Optional.of(it)
                                     _cardReaderMode.value = CardReaderViewModel.CardReaderMode.Result
                                 }
                         }

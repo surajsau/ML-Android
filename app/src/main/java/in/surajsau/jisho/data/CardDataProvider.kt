@@ -1,7 +1,6 @@
 package `in`.surajsau.jisho.data
 
 import android.graphics.Bitmap
-import android.util.Log
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.text.Text
 import com.google.mlkit.vision.text.TextRecognition
