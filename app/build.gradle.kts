@@ -89,6 +89,8 @@ dependencies {
     implementation(Dep.MLKit.Translation)
     implementation(Dep.MLKit.FaceDetection)
     implementation(Dep.MLKit.TextRecognition)
+    implementation(Dep.MLKit.TextRecognitionJp)
+    implementation(Dep.MLKit.TextRecognitionDev)
 
     implementation(Dep.Retrofit.Core)
     implementation(Dep.Retrofit.GsonConverter)

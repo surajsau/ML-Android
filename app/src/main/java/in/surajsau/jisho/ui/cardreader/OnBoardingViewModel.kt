@@ -28,6 +28,8 @@ class CardReaderViewModelImpl @Inject constructor(
 
     private val _showLoader = MutableStateFlow(false)
 
+    private var instruction = ""
+
     override val state: StateFlow<CardReaderViewModel.State>
         get() = combine(
             _frontDetails,
@@ -36,12 +38,12 @@ class CardReaderViewModelImpl @Inject constructor(
             _currentScreen,
             _showLoader,
         ) { frontDetails, backDetails, cardReaderMode, currentScreen, showLoader ->
-            val instruction = when (cardReaderMode) {
-                CardReaderViewModel.CardReaderMode.FrontCapture -> "Show front of the Card"
-                CardReaderViewModel.CardReaderMode.BackCapture -> "Show back of the Card"
-
-                else -> ""
-            }
+//            val instruction = when (cardReaderMode) {
+//                CardReaderViewModel.CardReaderMode.FrontCapture -> "Show front of the Card"
+//                CardReaderViewModel.CardReaderMode.BackCapture -> "Show back of the Card"
+//
+//                else -> ""
+//            }
 
             val screen = when (cardReaderMode) {
                 CardReaderViewModel.CardReaderMode.Result -> CardReaderViewModel.Screen.FilledDetails(

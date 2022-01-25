@@ -3,8 +3,10 @@ package `in`.surajsau.jisho.di.cardreader
 import `in`.surajsau.jisho.data.CardDataProvider
 import `in`.surajsau.jisho.data.FileProvider
 import `in`.surajsau.jisho.domain.cardreader.GetCardDetails
+import `in`.surajsau.jisho.domain.cardreader.processor.CCFrontProcessor
 import `in`.surajsau.jisho.domain.cardreader.processor.IDCardBackProcessor
 import `in`.surajsau.jisho.domain.cardreader.processor.IDCardFrontProcessor
+import `in`.surajsau.jisho.domain.models.CreditCard
 import `in`.surajsau.jisho.domain.models.IDCard
 import dagger.Module
 import dagger.Provides
@@ -16,6 +18,18 @@ import dagger.hilt.components.SingletonComponent
 abstract class OnboardingScreenModule {
 
     companion object {
+
+        @Provides
+        fun provideCCFrontDetails(
+            fileProvider: FileProvider,
+            cardDataProvider: CardDataProvider
+        ): GetCardDetails<CreditCard.Front> {
+            return GetCardDetails(
+                textProcessor = CCFrontProcessor(),
+                fileProvider = fileProvider,
+                cardDataProvider = cardDataProvider
+            )
+        }
 
         @Provides
         fun provideGetCardFrontDetails(

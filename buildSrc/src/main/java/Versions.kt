@@ -151,6 +151,9 @@ object Dep {
         const val FaceDetection = "com.google.mlkit:face-detection:${Versions.MLKit.FaceDetection}"
         const val DigitalInk = "com.google.mlkit:digital-ink-recognition:${Versions.MLKit.DigitalInk}"
         const val TextRecognition = "com.google.mlkit:text-recognition:${Versions.MLKit.TextRecognition}"
+
+        const val TextRecognitionJp = "com.google.mlkit:text-recognition-japanese:${Versions.MLKit.TextRecognition}"
+        const val TextRecognitionDev = "com.google.mlkit:text-recognition-devanagari:${Versions.MLKit.TextRecognition}"
     }
 }
 
