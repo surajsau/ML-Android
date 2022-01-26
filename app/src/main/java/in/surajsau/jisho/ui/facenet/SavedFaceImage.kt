@@ -3,8 +3,8 @@ package `in`.surajsau.jisho.ui.facenet
 import `in`.surajsau.jisho.domain.models.FaceModel
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
@@ -14,6 +14,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.rememberImagePainter
@@ -22,6 +24,7 @@ import java.io.File
 @Composable
 fun SavedFace(
     modifier: Modifier = Modifier,
+    isSelected: Boolean = false,
     model: FaceModel,
 ) {
 
@@ -35,14 +38,33 @@ fun SavedFace(
             modifier = Modifier
                 .clip(CircleShape)
                 .background(Color.LightGray)
-                .clipToBounds(),
+                .border(
+                    width = if (isSelected) 4.dp else 0.dp,
+                    color = Color.DarkGray,
+                    shape = CircleShape
+                )
+                .clipToBounds()
+                .fillMaxWidth()
+                .aspectRatio(1f),
             contentScale = ContentScale.Fit
         )
 
         Text(
             text = model.faceName,
             modifier = Modifier.padding(top = 4.dp),
-            fontSize = 12.sp
+            fontSize = 12.sp,
+            maxLines = 2,
+            textAlign = TextAlign.Center
         )
     }
+}
+
+@Preview
+@Composable
+private fun previewSavedFaceImage() {
+
+    SavedFace(
+        modifier = Modifier.width(56.dp),
+        model = FaceModel("", "John Doe")
+    )
 }

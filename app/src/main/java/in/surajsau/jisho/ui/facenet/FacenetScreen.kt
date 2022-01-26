@@ -7,6 +7,7 @@ import `in`.surajsau.jisho.ui.base.AskPermissionScreen
 import `in`.surajsau.jisho.ui.base.ForEachRow
 import android.Manifest
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -14,16 +15,18 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.Button
-import androidx.compose.material.CircularProgressIndicator
-import androidx.compose.material.Icon
-import androidx.compose.material.Text
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.modifier.modifierLocalOf
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import coil.compose.rememberImagePainter
@@ -80,6 +83,7 @@ fun FacenetScreen(modifier: Modifier = Modifier) {
                             ) {
                                 SavedFace(
                                     modifier = Modifier.size(56.dp),
+                                    isSelected = (state.filterMode as? FacenetViewModel.FilterMode.FaceSelected)?.faceName == face.faceName,
                                     model = face
                                 )
                             }
@@ -94,19 +98,17 @@ fun FacenetScreen(modifier: Modifier = Modifier) {
                             .padding(horizontal = 8.dp)
                     ) {
                         items(state.images.chunked(FacenetViewModel.GalleryModelsPerRow)) { images ->
-                            ForEachRow(
-                                items = images,
-                                modifier = Modifier.height(200.dp),
-                            ) {
+                            ForEachRow(items = images) {
                                 when (it) {
                                     is GalleryModel.Image -> {
                                         Image(
                                             painter = rememberImagePainter(data = File(it.imageFilePath)),
                                             contentDescription = it.faceName,
                                             modifier = Modifier
+                                                .padding(2.dp)
                                                 .weight(1f)
                                                 .fillMaxHeight()
-                                                .padding(2.dp),
+                                                .aspectRatio(1f),
                                             contentScale = ContentScale.FillWidth
                                         )
                                     }
@@ -159,6 +161,11 @@ fun FacenetScreen(modifier: Modifier = Modifier) {
                     faceName = name,
                     isNewFace = isNewFace,
                 )) },
+                onNotConfirmed = { faceFileName -> event(FacenetViewModel.Event.FaceNotConfirmed(
+                    imageFileName = dialog.imageFileName,
+                    faceFileName = faceFileName,
+                )) },
+                faceNames = dialog.faceNameSuggestions,
                 onDismiss = { event(FacenetViewModel.Event.DismissCheckFaceDialog) }
             )
         }
