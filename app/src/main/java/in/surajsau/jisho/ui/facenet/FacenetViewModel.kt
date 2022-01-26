@@ -30,26 +30,13 @@ class FacenetViewModelImpl @Inject constructor(
     private val fetchAllImages: FetchAllImages,
     private val fetchAllFaces: FetchAllFaces,
     private val fetchAllImagesForFace: FetchAllImagesForFace,
+    private val fetchFaceNames: FetchFaceNames,
 ) : ViewModel(), FacenetViewModel {
 
     init {
         viewModelScope.launch(Dispatchers.IO) {
             loadEmbeddings.invoke()
-
-            fetchAllImages.invoke()
-                .flowOn(Dispatchers.IO)
-                .collect {
-                    _images.value = it
-
-                    _screenMode.value = if (it.isEmpty())
-                        FacenetViewModel.ScreenMode.Empty
-                    else
-                        FacenetViewModel.ScreenMode.Gallery
-                }
-
-            fetchAllFaces.invoke()
-                .flowOn(Dispatchers.IO)
-                .collect { _peopleImages.value = it }
+            refreshData()
         }
     }
 
@@ -63,6 +50,8 @@ class FacenetViewModelImpl @Inject constructor(
 
     private val _showLoader = MutableStateFlow(false)
 
+    private val _filterMode = MutableStateFlow<FacenetViewModel.FilterMode>(FacenetViewModel.FilterMode.None)
+
     override val state: StateFlow<FacenetViewModel.State>
         get() = combine(
             _peopleImages,
@@ -70,21 +59,28 @@ class FacenetViewModelImpl @Inject constructor(
             _screenMode,
             _checkFaceDialog,
             _showLoader,
-        ) { peopleImages, images, screenMode, imageDialogMode, showLoader ->
+            _filterMode,
+        ) { result ->
+            Log.e("Gallery", "${result[5]}")
             FacenetViewModel.State(
-                personImages = peopleImages,
-                images = images.let {
+                personImages = result[0] as List<FaceModel>,
+                images = (result[1] as List<GalleryModel>).let {
                     // add empty cells at the end of list
                     val emptyCellsRequired = it.size % FacenetViewModel.GalleryModelsPerRow
                     it.toMutableList().apply {
                         repeat(emptyCellsRequired) { add(GalleryModel.Empty) }
                     }
                 },
-                screenMode = screenMode,
-                checkFaceDialog = imageDialogMode,
-                showLoader = showLoader
+                screenMode = result[2] as FacenetViewModel.ScreenMode,
+                checkFaceDialog = result[3] as FacenetViewModel.CheckFaceDialog,
+                showLoader = result[4] as Boolean,
+                filterMode = result[5] as FacenetViewModel.FilterMode
             )
         }.stateIn(viewModelScope, SharingStarted.Eagerly, FacenetViewModel.State())
+
+    // util get for quick access of current face recognition results
+    private val _faceResults: List<FaceRecognitionResult>
+        get() = (_checkFaceDialog.value as? FacenetViewModel.CheckFaceDialog.Show)?.recognitionResults ?: emptyList()
 
     override fun onEvent(event: FacenetViewModel.Event) {
         Log.e("Facenet", "$event")
@@ -93,23 +89,29 @@ class FacenetViewModelImpl @Inject constructor(
             is FacenetViewModel.Event.Initiate -> initiate.invoke()
             is FacenetViewModel.Event.Close -> cleanup.invoke()
             is FacenetViewModel.Event.OpenCameraClicked -> _screenMode.value = FacenetViewModel.ScreenMode.AddFace
-            is FacenetViewModel.Event.DismissCheckFaceDialog-> _checkFaceDialog.value = FacenetViewModel.CheckFaceDialog.DontShow
+            is FacenetViewModel.Event.DismissCheckFaceDialog-> {
+                _checkFaceDialog.value = FacenetViewModel.CheckFaceDialog.DontShow
+                _screenMode.value = FacenetViewModel.ScreenMode.Gallery
+
+                viewModelScope.launch { refreshData() }
+            }
             is FacenetViewModel.Event.CameraResultReceived -> {
                 viewModelScope.launch {
                     detectFaces.invoke(fileName = event.fileName)
+                        .zip(fetchFaceNames.invoke()) { result, names -> Pair(result, names) }
                         .onStart { _showLoader.value = true }
                         .flowOn(Dispatchers.IO)
-                        .collect { results ->
+                        .collect { (results, faceNames) ->
                             _showLoader.value = false
 
                             if (results.isEmpty()) {
                                 _checkFaceDialog.value = FacenetViewModel.CheckFaceDialog.DontShow
                                 return@collect
                             }
-
                             _checkFaceDialog.value = FacenetViewModel.CheckFaceDialog.Show(
                                 recognitionResults = results,
-                                imageFileName = event.fileName
+                                imageFileName = event.fileName,
+                                faceNameSuggestions = faceNames,
                             )
                         }
                 }
@@ -123,15 +125,32 @@ class FacenetViewModelImpl @Inject constructor(
                     }
 
                     saveImage.invoke(faceName = event.faceName, fileName = event.imageFileName)
+                }
+            }
 
-                    _checkFaceDialog.value = FacenetViewModel.CheckFaceDialog.DontShow
-                    _screenMode.value = FacenetViewModel.ScreenMode.Gallery
+            is FacenetViewModel.Event.FaceNotConfirmed -> {
+                viewModelScope.launch(Dispatchers.IO) {
+                    saveImage.invoke(faceName = "", fileName = event.imageFileName)
                 }
             }
 
             is FacenetViewModel.Event.FaceSelected -> {
                 viewModelScope.launch {
-                    fetchAllImagesForFace.invoke(faceName = event.faceName)
+                    val previousSelectedFace = (_filterMode.value as? FacenetViewModel.FilterMode.FaceSelected)?.faceName ?: ""
+
+                    _filterMode.value = if (previousSelectedFace != event.faceName) {
+                        FacenetViewModel.FilterMode.FaceSelected(event.faceName)
+                    } else {
+                        FacenetViewModel.FilterMode.None
+                    }
+
+                    val imagesFlow = if (previousSelectedFace != event.faceName) {
+                        fetchAllImagesForFace.invoke(faceName = event.faceName)
+                    } else {
+                        fetchAllImages.invoke()
+                    }
+
+                    imagesFlow
                         .flowOn(Dispatchers.IO)
                         .collect { _images.value = it }
                 }
@@ -139,12 +158,21 @@ class FacenetViewModelImpl @Inject constructor(
         }
     }
 
-    private fun refreshImages() {
-        viewModelScope.launch {
-            fetchAllFaces.invoke()
-                .flowOn(Dispatchers.IO)
-                .collect { _peopleImages.value = it }
-        }
+    private suspend fun refreshData() {
+        fetchAllImages.invoke()
+            .flowOn(Dispatchers.IO)
+            .collect {
+                _images.value = it
+
+                _screenMode.value = if (it.isEmpty())
+                    FacenetViewModel.ScreenMode.Empty
+                else
+                    FacenetViewModel.ScreenMode.Gallery
+            }
+
+        fetchAllFaces.invoke()
+            .flowOn(Dispatchers.IO)
+            .collect { _peopleImages.value = it }
     }
 
 }
@@ -154,12 +182,19 @@ interface FacenetViewModel: SingleFlowViewModel<FacenetViewModel.Event, FacenetV
     sealed class Event {
         object OpenCameraClicked: Event()
         object DismissCheckFaceDialog: Event()
+
         data class FaceConfirmed(
             val imageFileName: String,
             val faceFileName: String,
             val faceName: String,
             val isNewFace: Boolean
         ): Event()
+
+        data class FaceNotConfirmed(
+            val imageFileName: String,
+            val faceFileName: String
+        ): Event()
+
         data class FaceSelected(val faceName: String): Event()
         data class CameraResultReceived(val fileName: String): Event()
 
@@ -173,6 +208,7 @@ interface FacenetViewModel: SingleFlowViewModel<FacenetViewModel.Event, FacenetV
         val screenMode: ScreenMode = ScreenMode.Empty,
         val checkFaceDialog: CheckFaceDialog = CheckFaceDialog.DontShow,
         val showLoader: Boolean = false,
+        val filterMode: FilterMode = FilterMode.None
     )
 
     enum class ScreenMode {
@@ -183,6 +219,7 @@ interface FacenetViewModel: SingleFlowViewModel<FacenetViewModel.Event, FacenetV
         object DontShow: CheckFaceDialog()
 
         data class Show(
+            val faceNameSuggestions: List<String>,
             val recognitionResults: List<FaceRecognitionResult>,
             val imageFileName: String,
         ): CheckFaceDialog()
@@ -190,6 +227,11 @@ interface FacenetViewModel: SingleFlowViewModel<FacenetViewModel.Event, FacenetV
 
     companion object {
         const val GalleryModelsPerRow = 3
+    }
+
+    sealed class FilterMode {
+        data class FaceSelected(val faceName: String): FilterMode()
+        object None: FilterMode()
     }
 }
 

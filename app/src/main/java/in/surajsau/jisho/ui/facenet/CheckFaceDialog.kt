@@ -23,13 +23,17 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import coil.compose.rememberImagePainter
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import java.io.File
 
 @Composable
 fun CheckFaceDialog(
     modifier: Modifier = Modifier,
     results: List<FaceRecognitionResult>,
+    faceNames: List<String>,
     onNameConfirmed: (isNewFace: Boolean, faceFileName: String, name: String) -> Unit,
+    onNotConfirmed: (faceFileName: String) -> Unit,
     onDismiss: () -> Unit
 ) {
 
@@ -37,11 +41,13 @@ fun CheckFaceDialog(
 
     val currentResult by derivedStateOf { results[currentIndex] }
 
-    var currentName by remember { mutableStateOf("") }
+    var unansweredCount by remember { mutableStateOf(results.size) }
 
-    LaunchedEffect(currentResult) {
-        // initiate currentName value based on currentResult
-        currentName = (currentResult as? FaceRecognitionResult.Recognised)?.estimatedName ?: ""
+    DisposableEffect(unansweredCount){
+        if (unansweredCount == 0)
+            onDismiss.invoke()
+
+        onDispose{}
     }
 
     Dialog(
@@ -57,16 +63,19 @@ fun CheckFaceDialog(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
-                if (currentIndex > 0)
-                    IconButton(
-                        onClick = { currentIndex-- }
-                    ) {
-                        Icon(
-                            imageVector = Icons.Filled.KeyboardArrowLeft,
-                            contentDescription = "Previous",
-                            modifier = Modifier.padding(16.dp)
-                        )
+                Box(modifier = Modifier.width(48.dp)) {
+                    if (currentIndex > 0) {
+                        IconButton(
+                            onClick = { currentIndex-- }
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.KeyboardArrowLeft,
+                                contentDescription = "Previous",
+                                modifier = Modifier.padding(16.dp)
+                            )
+                        }
                     }
+                }
 
                 Image(
                     painter = rememberImagePainter(data = File(currentResult.faceFilePath)),
@@ -74,88 +83,46 @@ fun CheckFaceDialog(
                     modifier = Modifier
                         .padding(16.dp)
                         .clipToBounds()
-                        .clip(RoundedCornerShape(4.dp))
+                        .clip(RoundedCornerShape(8.dp))
                         .size(200.dp),
                     contentScale = ContentScale.Inside,
                 )
 
-                if (currentIndex < results.size - 1)
-                    IconButton(
-                        onClick = { currentIndex++ }
-                    ) {
-                        Icon(
-                            imageVector = Icons.Filled.KeyboardArrowRight,
-                            contentDescription = "Next",
-                            modifier = Modifier.padding(16.dp)
-                        )
-                    }
+                Box(modifier = Modifier.width(48.dp)) {
+                    if (currentIndex < results.size - 1)
+                        IconButton(onClick = { currentIndex++ }) {
+                            Icon(
+                                imageVector = Icons.Filled.KeyboardArrowRight,
+                                contentDescription = "Next",
+                                modifier = Modifier.padding(16.dp)
+                            )
+                        }
+                }
             }
 
             when (currentResult) {
                 is FaceRecognitionResult.Recognised -> {
-                    Text(
-                        text = (currentResult as FaceRecognitionResult.Recognised).estimatedName,
-                        modifier = Modifier.padding(8.dp)
+                    val suggestedName = (currentResult as FaceRecognitionResult.Recognised).estimatedName
+                    FaceRecognised(
+                        suggestedName = suggestedName,
+                        onSuggestionAccepted = { isAccepted ->
+                            if (isAccepted)
+                                onNameConfirmed.invoke(false, currentResult.faceFileName, suggestedName)
+                            else
+                                onNotConfirmed.invoke(currentResult.faceFileName)
+                            unansweredCount--
+                        }
                     )
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Button(
-                            modifier = Modifier
-                                .padding(16.dp)
-                                .weight(1f),
-                            onClick = {
-                                onNameConfirmed.invoke(false, currentResult.faceFileName, currentName)
-                            },
-                            colors = ButtonDefaults.buttonColors(
-                                backgroundColor = Color.Transparent,
-                            ),
-                            elevation = ButtonDefaults.elevation(
-                                defaultElevation = 0.dp,
-                                pressedElevation = 0.dp,
-                            ),
-                            border = BorderStroke(width = 2.dp, color = Color.Green)
-                        ) {
-                            Text(text = "Yes")
-                        }
-
-                        Button(
-                            modifier = Modifier.padding(16.dp).weight(1f),
-                            onClick = { onDismiss.invoke() },
-                            colors = ButtonDefaults.buttonColors(
-                                backgroundColor = Color.Transparent,
-                            ),
-                            elevation = ButtonDefaults.elevation(
-                                defaultElevation = 0.dp,
-                                pressedElevation = 0.dp,
-                            )
-                        ) {
-                            Text(text = "No")
-                        }
-                    }
                 }
 
-                is FaceRecognitionResult.NotRecognised -> {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        TextField(
-                            modifier = Modifier
-                                .padding(8.dp)
-                                .weight(1f),
-                            value = currentName,
-                            onValueChange = { currentName = it }
-                        )
-
-                        IconButton(onClick = {
-                            onNameConfirmed.invoke(true, currentResult.faceFileName, currentName) }
-                        ) {
-                            Icon(imageVector = Icons.Filled.CheckCircle, contentDescription = "Confirm")
-                        }
+                is FaceRecognitionResult.NotRecognised -> FaceNotRecognised(
+                    modifier = Modifier.fillMaxWidth(),
+                    faceNames = faceNames,
+                    onNameConfirmed = { faceName ->
+                        onNameConfirmed.invoke(true, currentResult.faceFileName, faceName)
+                        unansweredCount--
                     }
-                }
+                )
             }
 
             Line(modifier = Modifier
@@ -165,19 +132,102 @@ fun CheckFaceDialog(
 
             Button(
                 onClick = { onDismiss.invoke() },
-                colors = ButtonDefaults.buttonColors(
-                    backgroundColor = Color.Transparent,
-                ),
-                elevation = ButtonDefaults.elevation(
-                    defaultElevation = 0.dp,
-                    pressedElevation = 0.dp,
-                ),
-                modifier = Modifier.align(Alignment.End)
+                modifier = Modifier
+                    .align(Alignment.End)
+                    .fillMaxWidth()
             ) {
                 Text(text = "Done")
             }
+        }
+    }
+}
 
-            Spacer(modifier = Modifier.height(16.dp))
+@Composable
+private fun FaceRecognised(
+    suggestedName: String,
+    modifier: Modifier = Modifier,
+    onSuggestionAccepted: (isAccepted: Boolean) -> Unit,
+) {
+
+    Column(modifier = modifier) {
+        Text(
+            text = "Is this person $suggestedName?",
+            modifier = Modifier.padding(8.dp)
+        )
+        Row(
+            modifier = modifier
+                .padding(horizontal = 16.dp)
+                .fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            OutlinedButton(
+                modifier = Modifier.weight(1f),
+                onClick = { onSuggestionAccepted.invoke(true) },
+                border = BorderStroke(width = 2.dp, color = Color.Green)
+            ) { Text(text = "Yes") }
+
+            Spacer(modifier = Modifier.width(8.dp))
+
+            OutlinedButton(
+                modifier = Modifier.weight(1f),
+                onClick = { onSuggestionAccepted.invoke(false) },
+                colors = ButtonDefaults.buttonColors(backgroundColor = Color.Transparent),
+            ) { Text(text = "No") }
+        }
+    }
+}
+
+@Composable
+private fun FaceNotRecognised(
+    modifier: Modifier = Modifier,
+    faceNames: List<String>,
+    onNameConfirmed: (faceName: String) -> Unit,
+) {
+
+    val coroutineScope = rememberCoroutineScope()
+
+    var currentName by remember { mutableStateOf("") }
+
+    var filteredSuggestions by remember { mutableStateOf(emptyList<String>()) }
+
+    var showSuggestions by remember { mutableStateOf(false) }
+
+    Row(
+        modifier = modifier,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+
+        Box(modifier = Modifier.weight(1f)) {
+            OutlinedTextField(
+                modifier = Modifier.fillMaxWidth(),
+                value = currentName,
+                onValueChange = {
+                    currentName = it
+                    coroutineScope.launch(Dispatchers.IO) {
+                        filteredSuggestions = faceNames
+                            .filter { suggestion -> suggestion.startsWith(it) }
+                    }
+                }
+            )
+
+            DropdownMenu(
+                modifier = Modifier.fillMaxWidth(),
+                expanded = showSuggestions,
+                onDismissRequest = { showSuggestions = false }
+            ) {
+                filteredSuggestions.forEach { suggestion ->
+                    DropdownMenuItem(onClick = {
+                        currentName = suggestion
+                        showSuggestions = false
+                    }) {
+                        Text(text = suggestion)
+                    }
+                }
+            }
+        }
+
+        IconButton(onClick = { onNameConfirmed.invoke(currentName) }) {
+            Icon(imageVector = Icons.Filled.CheckCircle, contentDescription = "Confirm")
         }
     }
 }
