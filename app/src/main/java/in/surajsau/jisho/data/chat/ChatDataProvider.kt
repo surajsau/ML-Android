@@ -1,17 +1,17 @@
 package `in`.surajsau.jisho.data.chat
 
-import `in`.surajsau.jisho.data.model.ChatMessage
+import `in`.surajsau.jisho.data.model.ChatMessageModel
 import kotlinx.coroutines.channels.Channel
 import javax.inject.Inject
 
-class ChatProviderImpl @Inject constructor(
+class ChatDataProviderImpl @Inject constructor(
     private val chatApi: ChatApi,
-): ChatProvider {
+): ChatDataProvider {
 
-    override val latestMessage: Channel<ChatMessage> = Channel()
+    override val latestMessage: Channel<ChatMessageModel> = Channel()
 
     override suspend fun sendMessage(text: String) {
-        val message = ChatMessage.Message(
+        val message = ChatMessageModel.Message(
             text = text,
             isMe = true,
             ts = System.currentTimeMillis()
@@ -23,10 +23,10 @@ class ChatProviderImpl @Inject constructor(
     override suspend fun fetchRandomMessage() {
         val timeStamp = System.currentTimeMillis()
 
-        latestMessage.trySend(ChatMessage.Typing(ts = timeStamp))
+        latestMessage.trySend(ChatMessageModel.Typing(ts = timeStamp))
 
         val response = chatApi.randomKanye("https://api.kanye.rest/")
-        val message = ChatMessage.Message(
+        val message = ChatMessageModel.Message(
             text = response.quote,
             isMe = false,
             ts = timeStamp
@@ -36,9 +36,9 @@ class ChatProviderImpl @Inject constructor(
     }
 }
 
-interface ChatProvider {
+interface ChatDataProvider {
 
-    val latestMessage: Channel<ChatMessage>
+    val latestMessage: Channel<ChatMessageModel>
 
     suspend fun sendMessage(message: String)
     suspend fun fetchRandomMessage()
