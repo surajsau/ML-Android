@@ -17,5 +17,5 @@ sealed class ChatRowModel {
         val timestamp: String,
         val isLocal: Boolean,
         val message: AnnotatedString?,
-    )
+    ): ChatRowModel()
 }

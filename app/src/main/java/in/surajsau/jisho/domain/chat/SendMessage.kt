@@ -8,9 +8,6 @@ class SendMessage @Inject constructor(
 ) {
 
     suspend fun invoke(message: String, isLocal: Boolean) {
-        chatDataProvider.sendMessage(
-            message = message,
-            isMe = isLocal
-        )
+        chatDataProvider.sendMessage(message = message, isMe = isLocal)
     }
 }

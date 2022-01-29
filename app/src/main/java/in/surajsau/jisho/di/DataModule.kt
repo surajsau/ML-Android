@@ -30,6 +30,7 @@ abstract class DataModule {
     abstract fun bindScreenDataProvider(provider: ScreensDataProviderImpl): ScreensDataProvider
 
     @Binds
+    @Singleton
     abstract fun bindChatProvider(provider: ChatDataProviderImpl): ChatDataProvider
 
     @Binds
@@ -39,6 +40,7 @@ abstract class DataModule {
     abstract fun bindCardDataProvider(provider: CardDataProviderImpl): CardDataProvider
 
     @Binds
+    @Singleton
     abstract fun bindEntityExtractionProvider(provider: EntityExtractionpProviderImpl): EntityExtractionProvider
 
     companion object {

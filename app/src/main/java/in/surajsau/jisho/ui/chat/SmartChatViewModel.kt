@@ -2,13 +2,11 @@ package `in`.surajsau.jisho.ui.chat
 
 import `in`.surajsau.jisho.base.Optional
 import `in`.surajsau.jisho.base.SingleFlowViewModel
-import `in`.surajsau.jisho.domain.chat.FetchChatDetails
-import `in`.surajsau.jisho.domain.chat.FetchLatestMessage
-import `in`.surajsau.jisho.domain.chat.SendMessage
-import `in`.surajsau.jisho.domain.chat.SendPicture
+import `in`.surajsau.jisho.domain.chat.*
 import `in`.surajsau.jisho.domain.models.User
 import `in`.surajsau.jisho.domain.models.chat.ChatDetails
 import `in`.surajsau.jisho.domain.models.chat.ChatRowModel
+import `in`.surajsau.jisho.ui.digitalink.MLKitModelStatus
 import androidx.compose.runtime.compositionLocalOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -25,6 +23,7 @@ class SmartChatViewModelImpl @Inject constructor(
     private val sendPicture: SendPicture,
     private val fetchChatDetails: FetchChatDetails,
     private val fetchLatestMessage: FetchLatestMessage,
+    private val checkEntityExtractorAvailability: CheckEntityExtractorAvailability,
 ): ViewModel(), SmartChatViewModel {
 
     private val userSwitchRandom = Random(1)
@@ -35,19 +34,42 @@ class SmartChatViewModelImpl @Inject constructor(
 
     private val _chatDetails = MutableStateFlow<Optional<ChatDetails>>(Optional.Empty)
 
+    private val _modelStatus = MutableStateFlow(MLKitModelStatus.NotDownloaded)
+
     init {
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch {
             fetchLatestMessage.invoke()
-                .onEach {
+                .onEach { chatRowModel ->
                     val messages = _messages.value.toMutableList()
-                    messages.add(0, it)
+                    _messages.value = messages.apply {
+                        when {
+                            chatRowModel is ChatRowModel.Message && chatRowModel.isLocal -> add(0, chatRowModel)
+                            chatRowModel is ChatRowModel.Message && !chatRowModel.isLocal -> {
+                                val existingTypingIndex = indexOfFirst { it is ChatRowModel.Typing }
+                                if (existingTypingIndex == -1)
+                                    add(0, chatRowModel)
+                                else
+                                    set(existingTypingIndex, chatRowModel)
+                            }
+
+                            else -> add(0, chatRowModel)
+                        }
+                    }
                 }
+                .flowOn(Dispatchers.IO)
                 .collect()
         }
 
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch {
             fetchChatDetails.invoke()
+                .flowOn(Dispatchers.IO)
                 .collect { _chatDetails.value = Optional.of(it) }
+        }
+
+        viewModelScope.launch {
+            checkEntityExtractorAvailability.invoke()
+                .flowOn(Dispatchers.IO)
+                .collect { _modelStatus.value = it }
         }
     }
 
@@ -56,8 +78,9 @@ class SmartChatViewModelImpl @Inject constructor(
             _currentUser,
             _messages,
             _chatDetails,
-        ) { currentUser, messages, chatDetails ->
-            val showLoader = chatDetails is Optional.Empty
+            _modelStatus,
+        ) { currentUser, messages, chatDetails, modelStatus ->
+            val showLoader = modelStatus != MLKitModelStatus.Downloaded || chatDetails is Optional.Empty
 
             SmartChatViewModel.State(
                 showLoader = showLoader,

@@ -3,6 +3,7 @@ package `in`.surajsau.jisho.ui.chat
 import `in`.surajsau.jisho.domain.models.chat.ChatAnnotation
 import `in`.surajsau.jisho.domain.models.chat.ChatRowModel
 import `in`.surajsau.jisho.ui.base.rememberExternalIntentHandler
+import android.util.Log
 import androidx.compose.foundation.text.ClickableText
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -16,7 +17,6 @@ fun ChatClickableText(
     annotationMaps: List<ChatAnnotation>,
     modifier: Modifier = Modifier
 ) {
-
     val externalIntentHandler = rememberExternalIntentHandler()
 
     ClickableText(
@@ -27,6 +27,7 @@ fun ChatClickableText(
             annotationMaps.forEach { annotation ->
                 val tag = annotation.tag
                 annotatedString.getStringAnnotations(tag = tag, start = offset, end = offset).firstOrNull()?.let {
+                    Log.e("SmartChat", "$it")
                     when (annotation) {
                         is ChatAnnotation.Reminder -> externalIntentHandler.openAlarm(message = it.item, timestamp = annotation.timeStamp)
                         is ChatAnnotation.Address -> externalIntentHandler.openMap(annotation.address)

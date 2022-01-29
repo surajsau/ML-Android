@@ -7,11 +7,15 @@ import android.provider.AlarmClock
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.rememberPermissionState
 import com.soywiz.klock.DateTime
 
+@OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun rememberExternalIntentHandler(): ExternalIntentHandler {
     val context = LocalContext.current
+    val permissionState = rememberPermissionState(permission = android.Manifest.permission.CALL_PHONE)
     return remember { ExternalIntentHandler(context) }
 }
 
@@ -39,13 +43,16 @@ class ExternalIntentHandler constructor(
             putExtra(AlarmClock.EXTRA_MINUTES, dateTime.minutes)
         }
 
-        if (intent.resolveActivity(context.packageManager) != null) {
-            context.startActivity(intent)
-        }
+        context.startActivity(intent)
     }
 
     fun openPhone(phone: String) {
+        val intent = Intent(Intent.ACTION_CALL).apply {
+            data = Uri.parse("tel:$phone")
+        }
 
+        if (intent.resolveActivity(context.packageManager) != null)
+            context.startActivity(intent)
     }
 
     fun openEmail(address: String) {

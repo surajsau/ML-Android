@@ -6,6 +6,7 @@ import `in`.surajsau.jisho.data.chat.EntityExtractionProvider
 import `in`.surajsau.jisho.data.model.ChatMessageModel
 import `in`.surajsau.jisho.domain.models.chat.ChatAnnotation
 import `in`.surajsau.jisho.domain.models.chat.ChatRowModel
+import android.util.Log
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextDecoration
@@ -42,12 +43,12 @@ class FetchLatestMessage @Inject constructor(
 
                             annotations.forEachIndexed { index, annotation ->
                                 // if first annotation, append text before the first annotation
-                                if (index == 0) {
+                                if (index == 0 && annotation.start > 0) {
                                     append(mainText.substring(startIndex = 0, endIndex = firstAnnotation.start))
                                 }
 
                                 val entity = annotation.entities.first()
-                                val annotatedSubString = mainText.substring(startIndex = annotation.start, endIndex = annotation.end + 1)
+                                val annotatedSubString = mainText.substring(startIndex = annotation.start, endIndex = annotation.end)
 
                                 val chatAnnotation = when {
                                     entity is DateTimeEntity -> {
@@ -70,6 +71,8 @@ class FetchLatestMessage @Inject constructor(
                                 }
 
                                 if (chatAnnotation is Optional.Some) {
+                                    annotationMaps.add(chatAnnotation.data)
+
                                     pushStringAnnotation(tag = chatAnnotation.data.tag, annotation = mainText)
                                     withStyle(style = SpanStyle(textDecoration = TextDecoration.Underline)) {
                                         append(annotatedSubString)
@@ -81,7 +84,7 @@ class FetchLatestMessage @Inject constructor(
                                 }
 
                                 // if last annotation, append text after the last annotation
-                                if (index == annotations.size - 1) {
+                                if (index == annotations.size - 1 && annotation.end < mainText.length - 1) {
                                     append(mainText.substring(startIndex = annotation.end + 1))
                                 }
                             }

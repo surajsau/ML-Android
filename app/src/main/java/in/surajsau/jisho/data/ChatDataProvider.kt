@@ -2,6 +2,7 @@ package `in`.surajsau.jisho.data
 
 import `in`.surajsau.jisho.data.model.ChatMessageModel
 import `in`.surajsau.jisho.domain.models.chat.ChatDetails
+import android.util.Log
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -20,18 +21,21 @@ class ChatDataProviderImpl @Inject constructor(): ChatDataProvider {
         imageUrl: String?,
         isMe: Boolean,
     ) {
-        val id = System.currentTimeMillis()/1000
+        val ts = System.currentTimeMillis()
+        val id = (ts/1000).toInt()
         val message = ChatMessageModel.Message(
-            id = id.toInt(),
+            id = id,
             text = text,
             isMe = isMe,
-            ts = System.currentTimeMillis(),
+            ts = ts,
             imageUrl = imageUrl,
         )
 
         // add random delay to act as an api
-        if (!isMe)
+        if (!isMe) {
+            latestMessage.trySend(ChatMessageModel.Typing(ts = ts))
             delay(randomDelay.nextLong(300L, 2000L))
+        }
 
         latestMessage.trySend(message)
     }

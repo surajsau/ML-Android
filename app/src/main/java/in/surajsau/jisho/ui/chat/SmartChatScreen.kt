@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
@@ -21,8 +22,15 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.rememberImagePainter
@@ -55,7 +63,8 @@ fun SmartChatScreen(
                     .weight(1f)
             ) {
                 CircularProgressIndicator(
-                    modifier = Modifier.size(48.dp)
+                    modifier = Modifier
+                        .size(48.dp)
                         .align(Alignment.Center)
                 )
             }
@@ -68,9 +77,27 @@ fun SmartChatScreen(
                 messages = state.messages
             )
 
+            Text(
+                text = when(state.currentUser) {
+                    SmartChatViewModel.CurrentUser.LOCAL -> "Message as Me"
+                    SmartChatViewModel.CurrentUser.REMOTE -> "Message as Other"
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(
+                        color = when (state.currentUser) {
+                            SmartChatViewModel.CurrentUser.LOCAL -> MaterialTheme.colors.primary
+                            SmartChatViewModel.CurrentUser.REMOTE -> MaterialTheme.colors.secondary
+                        }
+                    )
+                    .padding(vertical = 2.dp),
+                fontSize = 10.sp,
+                textAlign = TextAlign.Center,
+                color = Color.White
+            )
+
             SendMessageContainer(
                 modifier = Modifier
-                    .padding(horizontal = 16.dp,)
                     .fillMaxWidth(),
                 onSendClicked = { event(SmartChatViewModel.Event.SendMessage(it)) },
             )
@@ -125,9 +152,11 @@ private fun ChatBody(
     messages: List<ChatRowModel>
 ) {
 
-    LazyColumn(modifier = modifier
-        .background(Color.LightGray)
-        .padding(horizontal = 16.dp)
+    LazyColumn(
+        modifier = modifier
+            .background(Color.LightGray)
+            .padding(horizontal = 16.dp),
+        reverseLayout = true,
     ) {
         itemsIndexed(messages) { index, chatRow ->
             ChatRow(
@@ -153,20 +182,49 @@ private fun SendMessageContainer(
     Row(
         modifier = modifier
             .background(Color.White)
-            .padding(vertical = 8.dp)
+            .padding(vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        TextField(
+
+        Spacer(modifier = Modifier.width(16.dp))
+
+        OutlinedTextField(
+            modifier = Modifier.weight(1f),
             value = text,
-            onValueChange = { text = it }
+            onValueChange = { text = it },
+            shape = RoundedCornerShape(size = 8.dp),
         )
 
+        Spacer(modifier = Modifier.width(8.dp))
+
         IconButton(
-            onClick = { onSendClicked.invoke(text) },
+            onClick = {
+                if (text.isNotEmpty())
+                    onSendClicked.invoke(text)
+
+                text = ""
+            },
             modifier = Modifier
-                .size(36.dp)
-                .background(color = MaterialTheme.colors.primary)
+                .background(color = MaterialTheme.colors.primary, shape = CircleShape)
         ) {
-            Icon(imageVector = Icons.Filled.Send, contentDescription = "")
+            Icon(
+                imageVector = Icons.Filled.Send,
+                contentDescription = "",
+                tint = Color.White
+            )
         }
+
+        Spacer(modifier = Modifier.width(16.dp))
+    }
+}
+
+@Preview
+@Composable
+private fun previewSendMessageContainer() {
+
+    Box(modifier = Modifier
+        .fillMaxWidth()
+        .background(Color.White)) {
+        SendMessageContainer(onSendClicked = {})
     }
 }
