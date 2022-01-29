@@ -91,9 +91,7 @@ dependencies {
     implementation(Dep.MLKit.TextRecognition)
     implementation(Dep.MLKit.TextRecognitionJp)
     implementation(Dep.MLKit.TextRecognitionDev)
-
-    implementation(Dep.Retrofit.Core)
-    implementation(Dep.Retrofit.GsonConverter)
+    implementation(Dep.MLKit.EntityExtraction)
 
     implementation(Dep.Coil.Compose)
     implementation(Dep.Coil.Gif)

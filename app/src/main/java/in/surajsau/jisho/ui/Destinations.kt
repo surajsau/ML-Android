@@ -5,7 +5,7 @@ enum class Destinations(val value: String) {
 
     DigitalInk("digital_ink"),
     StyleTransfer("style_transfer"),
-    Gpt("gpt"),
+    SmartChat("gpt"),
     Facenet("facenet"),
     CardReader("card_reader")
 }

@@ -27,7 +27,7 @@ class ScreensDataProviderImpl @Inject constructor(): ScreensDataProvider {
                 ),
 
                 Screen(
-                    destinations = Destinations.Gpt,
+                    destinations = Destinations.SmartChat,
                     previewImage = "",
                     title = "Text Suggestion using GPT",
                     description = "Using Huggingface/Transformers GPT model for text completion",

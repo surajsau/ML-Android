@@ -12,6 +12,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -92,11 +97,11 @@ private fun MessageBubble(
             color = if (chatRowModel.isLocal) MaterialTheme.colors.primary else MaterialTheme.colors.secondary,
             shape = RoundedCornerShape(size = 8.dp)
         )
-        .padding(16.dp)
+        .padding(horizontal = 16.dp, vertical = 8.dp)
     ) {
-        Text(
-            text = chatRowModel.value,
-            color = Color.White,
+        ChatClickableText(
+            annotatedString = chatRowModel.value,
+            annotationMaps = chatRowModel.annotationMaps,
         )
 
         Text(
@@ -125,8 +130,9 @@ private fun PreviewChatRow() {
         ChatRow(
             chatRowModel = ChatRowModel.Message(
                 isLocal = true,
-                value = "Sample message from Local User",
-                timestamp = "09:30"
+                value = AnnotatedString("Sample message from Local User"),
+                timestamp = "09:30",
+                annotationMaps = emptyList()
             ),
             modifier = Modifier
                 .fillMaxWidth()
@@ -136,8 +142,9 @@ private fun PreviewChatRow() {
         ChatRow(
             chatRowModel = ChatRowModel.Message(
                 isLocal = false,
-                value = "Sample message from Remote User",
-                timestamp = "09:30"
+                value = AnnotatedString("Sample message from Remote User"),
+                timestamp = "09:30",
+                annotationMaps = emptyList()
             ),
             modifier = Modifier
                 .fillMaxWidth()
@@ -147,8 +154,17 @@ private fun PreviewChatRow() {
         ChatRow(
             chatRowModel = ChatRowModel.Message(
                 isLocal = false,
-                value = "Sample message from Remote User. Sample message from Remote User. Sample message from Remote User. Sample message from Remote User",
-                timestamp = "09:30"
+                value = buildAnnotatedString {
+                    append("Sample message from Remote User. Sample message from Remote User. Sample ")
+
+                    withStyle(SpanStyle(textDecoration = TextDecoration.Underline)) {
+                        append("message from Remote")
+                    }
+
+                    append(" User. Sample message from Remote User")
+                },
+                timestamp = "09:30",
+                annotationMaps = emptyList()
             ),
             modifier = Modifier
                 .fillMaxWidth()

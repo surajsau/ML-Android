@@ -1,12 +1,13 @@
 package `in`.surajsau.jisho.di
 
 import `in`.surajsau.jisho.data.*
-import `in`.surajsau.jisho.data.chat.ChatDataProvider
-import `in`.surajsau.jisho.data.chat.ChatDataProviderImpl
+import `in`.surajsau.jisho.data.chat.EntityExtractionProvider
+import `in`.surajsau.jisho.data.chat.EntityExtractionpProviderImpl
 import `in`.surajsau.jisho.data.db.AppDb
 import `in`.surajsau.jisho.data.facenet.*
 import android.content.Context
 import androidx.room.Room
+import com.google.mlkit.nl.entityextraction.internal.EntityExtractorImpl
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
@@ -36,6 +37,9 @@ abstract class DataModule {
 
     @Binds
     abstract fun bindCardDataProvider(provider: CardDataProviderImpl): CardDataProvider
+
+    @Binds
+    abstract fun bindEntityExtractionProvider(provider: EntityExtractionpProviderImpl): EntityExtractionProvider
 
     companion object {
 
