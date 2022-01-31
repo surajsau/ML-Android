@@ -1,15 +1,12 @@
 package `in`.surajsau.jisho.data.chat
 
 import `in`.surajsau.jisho.data.model.ChatMessageModel
-import android.util.Log
 import com.google.android.gms.tasks.Tasks
 import com.google.mlkit.nl.smartreply.*
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
-class SmartRepliesProviderImpl @Inject constructor() : SmartRepliesProvider {
+class ReplySuggestionProviderImpl @Inject constructor() : ReplySuggestionProvider {
 
     private val smartReplyGenerator by lazy {
         SmartReply.getClient(SmartReplyGeneratorOptions.Builder().build())
@@ -40,7 +37,7 @@ class SmartRepliesProviderImpl @Inject constructor() : SmartRepliesProvider {
     }
 }
 
-interface SmartRepliesProvider {
+interface ReplySuggestionProvider {
 
     val suggestions: Channel<List<SmartReplySuggestion>>
 

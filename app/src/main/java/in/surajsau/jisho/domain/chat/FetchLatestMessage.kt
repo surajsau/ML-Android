@@ -3,7 +3,7 @@ package `in`.surajsau.jisho.domain.chat
 import `in`.surajsau.jisho.base.Optional
 import `in`.surajsau.jisho.data.ChatDataProvider
 import `in`.surajsau.jisho.data.chat.EntityExtractionProvider
-import `in`.surajsau.jisho.data.chat.SmartRepliesProvider
+import `in`.surajsau.jisho.data.chat.ReplySuggestionProvider
 import `in`.surajsau.jisho.data.model.ChatMessageModel
 import `in`.surajsau.jisho.domain.models.chat.ChatAnnotation
 import `in`.surajsau.jisho.domain.models.chat.ChatRowModel
@@ -18,7 +18,7 @@ import kotlinx.coroutines.flow.*
 import javax.inject.Inject
 
 class FetchLatestMessage @Inject constructor(
-    private val smartRepliesProvider: SmartRepliesProvider,
+    private val replySuggestionProvider: ReplySuggestionProvider,
     private val chatDataProvider: ChatDataProvider,
     private val entityExtractionProvider: EntityExtractionProvider,
 ) {
@@ -28,7 +28,7 @@ class FetchLatestMessage @Inject constructor(
             .receiveAsFlow()
             .onEach {
                 if (it is ChatMessageModel.Message) {
-                    smartRepliesProvider.addMessage(it)
+                    replySuggestionProvider.addMessage(it)
                 }
             }
             .map {

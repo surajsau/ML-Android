@@ -1,17 +1,17 @@
 package `in`.surajsau.jisho.domain.chat
 
-import `in`.surajsau.jisho.data.chat.SmartRepliesProvider
+import `in`.surajsau.jisho.data.chat.ReplySuggestionProvider
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.receiveAsFlow
 import javax.inject.Inject
 
 class FetchSuggestions @Inject constructor(
-    private val smartRepliesProvider: SmartRepliesProvider
+    private val replySuggestionProvider: ReplySuggestionProvider
 ) {
 
     fun invoke(): Flow<List<String>> {
-        return smartRepliesProvider.suggestions
+        return replySuggestionProvider.suggestions
             .receiveAsFlow()
             .map { suggestions -> suggestions.map { it.text } }
     }

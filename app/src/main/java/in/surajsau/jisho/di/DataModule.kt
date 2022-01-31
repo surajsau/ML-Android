@@ -3,13 +3,12 @@ package `in`.surajsau.jisho.di
 import `in`.surajsau.jisho.data.*
 import `in`.surajsau.jisho.data.chat.EntityExtractionProvider
 import `in`.surajsau.jisho.data.chat.EntityExtractionpProviderImpl
-import `in`.surajsau.jisho.data.chat.SmartRepliesProvider
-import `in`.surajsau.jisho.data.chat.SmartRepliesProviderImpl
+import `in`.surajsau.jisho.data.chat.ReplySuggestionProvider
+import `in`.surajsau.jisho.data.chat.ReplySuggestionProviderImpl
 import `in`.surajsau.jisho.data.db.AppDb
 import `in`.surajsau.jisho.data.facenet.*
 import android.content.Context
 import androidx.room.Room
-import com.google.mlkit.nl.entityextraction.internal.EntityExtractorImpl
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
@@ -52,7 +51,7 @@ abstract class DataModule {
 
     @Binds
     @Singleton
-    abstract fun bindSmartRepliesProvider(provider: SmartRepliesProviderImpl): SmartRepliesProvider
+    abstract fun bindSmartRepliesProvider(provider: ReplySuggestionProviderImpl): ReplySuggestionProvider
 
     companion object {
 
