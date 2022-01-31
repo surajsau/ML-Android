@@ -17,15 +17,15 @@ class ChatDataProviderImpl @Inject constructor(): ChatDataProvider {
     override val latestMessage: Channel<ChatMessageModel> = Channel()
 
     override suspend fun sendMessage(
-        text: String,
+        message: String,
         imageUrl: String?,
         isMe: Boolean,
     ) {
         val ts = System.currentTimeMillis()
         val id = (ts/1000).toInt()
-        val message = ChatMessageModel.Message(
+        val model = ChatMessageModel.Message(
             id = id,
-            text = text,
+            text = message,
             isMe = isMe,
             ts = ts,
             imageUrl = imageUrl,
@@ -37,7 +37,7 @@ class ChatDataProviderImpl @Inject constructor(): ChatDataProvider {
             delay(randomDelay.nextLong(300L, 2000L))
         }
 
-        latestMessage.trySend(message)
+        latestMessage.trySend(model)
     }
 
     override fun fetchChatDetails(): Flow<ChatDetails> = flow {

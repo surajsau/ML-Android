@@ -3,10 +3,10 @@ package `in`.surajsau.jisho.ui.chat
 import `in`.surajsau.jisho.base.Optional
 import `in`.surajsau.jisho.base.SingleFlowViewModel
 import `in`.surajsau.jisho.domain.chat.*
-import `in`.surajsau.jisho.domain.models.User
 import `in`.surajsau.jisho.domain.models.chat.ChatDetails
 import `in`.surajsau.jisho.domain.models.chat.ChatRowModel
 import `in`.surajsau.jisho.ui.digitalink.MLKitModelStatus
+import android.util.Log
 import androidx.compose.runtime.compositionLocalOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -20,7 +20,6 @@ import kotlin.random.Random
 @HiltViewModel
 class SmartChatViewModelImpl @Inject constructor(
     private val sendMessage: SendMessage,
-    private val sendPicture: SendPicture,
     private val fetchChatDetails: FetchChatDetails,
     private val fetchLatestMessage: FetchLatestMessage,
     private val checkEntityExtractorAvailability: CheckEntityExtractorAvailability,
@@ -28,13 +27,13 @@ class SmartChatViewModelImpl @Inject constructor(
 
     private val userSwitchRandom = Random(1)
 
-    private val _currentUser = MutableStateFlow(SmartChatViewModel.CurrentUser.LOCAL)
-
     private val _messages = MutableStateFlow(emptyList<ChatRowModel>())
 
     private val _chatDetails = MutableStateFlow<Optional<ChatDetails>>(Optional.Empty)
 
     private val _modelStatus = MutableStateFlow(MLKitModelStatus.NotDownloaded)
+
+    private val _messageContainerModel = MutableStateFlow(SmartChatViewModel.MessageContainerModel())
 
     init {
         viewModelScope.launch {
@@ -75,45 +74,50 @@ class SmartChatViewModelImpl @Inject constructor(
 
     override val state: StateFlow<SmartChatViewModel.State>
         get() = combine(
-            _currentUser,
             _messages,
             _chatDetails,
             _modelStatus,
-        ) { currentUser, messages, chatDetails, modelStatus ->
+            _messageContainerModel
+        ) { messages, chatDetails, modelStatus, messageContainerModel ->
             val showLoader = modelStatus != MLKitModelStatus.Downloaded || chatDetails is Optional.Empty
 
             SmartChatViewModel.State(
                 showLoader = showLoader,
-                currentUser = currentUser,
                 messages = messages,
                 chatDetails = chatDetails,
+                messageContainerModel = messageContainerModel
             )
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(), SmartChatViewModel.State())
 
     override fun onEvent(event: SmartChatViewModel.Event) {
         when (event) {
-            is SmartChatViewModel.Event.SendMessage -> {
-                viewModelScope.launch {
-                    val currentUser = _currentUser.value
-                    sendMessage.invoke(
-                        message = event.message,
-                        isLocal = currentUser == SmartChatViewModel.CurrentUser.LOCAL
-                    )
+            is SmartChatViewModel.Event.MessageTextChanged -> {
+                val imageUrl = SmartChatViewModel.ImageUrlRegex.find(event.message)
 
-                    _currentUser.value = SmartChatViewModel.CurrentUser.from(random = userSwitchRandom.nextFloat())
-                }
+                Log.e("SmartChat", "${imageUrl?.value}")
+
+                _messageContainerModel.value = _messageContainerModel.value.copy(
+                    isSendButtonEnabled = event.message.isNotEmpty(),
+                    imageUrl = imageUrl?.value,
+                    text = event.message
+                )
             }
 
-            is SmartChatViewModel.Event.SendPicture -> {
+            is SmartChatViewModel.Event.SendMessageClicked -> {
                 viewModelScope.launch {
-                    val currentUser = _currentUser.value
-                    sendPicture.invoke(
-                        imageUrl = event.imageUrl,
-                        message = event.message,
-                        isLocal = currentUser == SmartChatViewModel.CurrentUser.LOCAL
+                    val messageContainerModel = _messageContainerModel.value
+                    sendMessage.invoke(
+                        imageUrl = messageContainerModel.imageUrl,
+                        message = messageContainerModel.text,
+                        isLocal = messageContainerModel.currentUser == SmartChatViewModel.CurrentUser.LOCAL
                     )
 
-                    _currentUser.value = SmartChatViewModel.CurrentUser.from(random = userSwitchRandom.nextFloat())
+                    _messageContainerModel.value = SmartChatViewModel.MessageContainerModel(
+                        currentUser = SmartChatViewModel.CurrentUser.from(random = userSwitchRandom.nextFloat()),
+                        isSendButtonEnabled = false,
+                        imageUrl = null,
+                        text = ""
+                    )
                 }
             }
         }
@@ -124,19 +128,15 @@ class SmartChatViewModelImpl @Inject constructor(
 interface SmartChatViewModel : SingleFlowViewModel<SmartChatViewModel.Event, SmartChatViewModel.State> {
 
     sealed class Event {
-        data class SendMessage(val message: String): Event()
-
-        data class SendPicture(
-            val imageUrl: String,
-            val message: String
-        ): Event()
+        data class MessageTextChanged(val message: String): Event()
+        object SendMessageClicked: Event()
     }
 
     data class State(
         val showLoader: Boolean = false,
-        val currentUser: CurrentUser = CurrentUser.LOCAL,
         val messages: List<ChatRowModel> = emptyList(),
         val chatDetails: Optional<ChatDetails> = Optional.Empty,
+        val messageContainerModel: MessageContainerModel = MessageContainerModel(),
     )
 
     enum class CurrentUser {
@@ -145,6 +145,17 @@ interface SmartChatViewModel : SingleFlowViewModel<SmartChatViewModel.Event, Sma
         companion object {
             fun from(random: Float): CurrentUser = if (random < 0.5f) { LOCAL } else { REMOTE }
         }
+    }
+
+    data class MessageContainerModel(
+        val currentUser: CurrentUser = CurrentUser.LOCAL,
+        val isSendButtonEnabled: Boolean = false,
+        val imageUrl: String? = null,
+        val text: String = ""
+    )
+
+    companion object {
+        val ImageUrlRegex = Regex("(https?:\\/\\/.*\\.(?:png|jpg|jpeg))")
     }
 }
 

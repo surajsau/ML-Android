@@ -16,6 +16,7 @@ sealed class ChatRowModel {
         val imageUrl: String,
         val timestamp: String,
         val isLocal: Boolean,
-        val message: AnnotatedString?,
+        val message: AnnotatedString,
+        val annotationMaps: List<ChatAnnotation>
     ): ChatRowModel()
 }

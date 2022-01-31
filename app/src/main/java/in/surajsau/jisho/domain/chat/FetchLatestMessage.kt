@@ -90,12 +90,22 @@ class FetchLatestMessage @Inject constructor(
                             }
                         }
 
-                        ChatRowModel.Message(
-                            value = text,
-                            isLocal = it.isMe,
-                            timestamp = DateTime.invoke(it.timeStamp).toString("HH:mm"),
-                            annotationMaps = annotationMaps
-                        )
+                        if (!it.imageUrl.isNullOrEmpty()) {
+                            ChatRowModel.PictureMessage(
+                                imageUrl = it.imageUrl,
+                                message = text,
+                                isLocal = it.isMe,
+                                timestamp = DateTime.invoke(it.timeStamp).toString("HH:mm"),
+                                annotationMaps = annotationMaps
+                            )
+                        } else {
+                            ChatRowModel.Message(
+                                value = text,
+                                isLocal = it.isMe,
+                                timestamp = DateTime.invoke(it.timeStamp).toString("HH:mm"),
+                                annotationMaps = annotationMaps
+                            )
+                        }
                     }
 
                     is ChatMessageModel.Typing -> ChatRowModel.Typing
