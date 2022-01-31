@@ -43,6 +43,9 @@ android {
     composeOptions {
         kotlinCompilerExtensionVersion = "1.0.4"
     }
+    androidResources {
+        noCompress("tflite")
+    }
     packagingOptions {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
@@ -92,6 +95,7 @@ dependencies {
     implementation(Dep.MLKit.TextRecognitionJp)
     implementation(Dep.MLKit.TextRecognitionDev)
     implementation(Dep.MLKit.EntityExtraction)
+    implementation(Dep.MLKit.SmartReplies)
 
     implementation(Dep.Coil.Compose)
     implementation(Dep.Coil.Gif)
