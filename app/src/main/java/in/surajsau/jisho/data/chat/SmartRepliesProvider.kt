@@ -1,9 +1,11 @@
 package `in`.surajsau.jisho.data.chat
 
 import `in`.surajsau.jisho.data.model.ChatMessageModel
+import android.util.Log
 import com.google.android.gms.tasks.Tasks
 import com.google.mlkit.nl.smartreply.*
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
@@ -15,19 +17,21 @@ class SmartRepliesProviderImpl @Inject constructor() : SmartRepliesProvider {
 
     private val conversation = mutableListOf<TextMessage>()
 
-    override suspend fun getSuggestions(message: ChatMessageModel.Message): List<SmartReplySuggestion> {
-        return withContext(Dispatchers.IO) {
-            conversation.add(
-                if (message.isMe)
-                    TextMessage.createForLocalUser(message.text, message.timeStamp)
-                else
-                    TextMessage.createForRemoteUser(message.text, message.timeStamp, "1")
-            )
+    override val suggestions: Channel<List<SmartReplySuggestion>> = Channel()
 
+    override suspend fun addMessage(message: ChatMessageModel.Message) {
+        conversation.add(
+            if (message.isMe)
+                TextMessage.createForLocalUser(message.text, message.timeStamp)
+            else
+                TextMessage.createForRemoteUser(message.text, message.timeStamp, "1")
+        )
+
+        if (!message.isMe) {
             val task = smartReplyGenerator.suggestReplies(conversation)
             val result = Tasks.await(task)
 
-            result.suggestions
+            suggestions.trySend(result.suggestions)
         }
     }
 
@@ -38,7 +42,9 @@ class SmartRepliesProviderImpl @Inject constructor() : SmartRepliesProvider {
 
 interface SmartRepliesProvider {
 
-    suspend fun getSuggestions(message: ChatMessageModel.Message): List<SmartReplySuggestion>
+    val suggestions: Channel<List<SmartReplySuggestion>>
+
+    suspend fun addMessage(message: ChatMessageModel.Message)
 
     fun clearConversation()
 }

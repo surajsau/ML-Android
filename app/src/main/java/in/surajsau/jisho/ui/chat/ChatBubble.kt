@@ -30,9 +30,6 @@ fun ChatRow(
     chatRowModel: ChatRowModel,
     modifier: Modifier = Modifier
 ) {
-
-    Log.e("SmartChat", "$chatRowModel")
-
     Box(modifier = modifier) {
         when (chatRowModel) {
             is ChatRowModel.Message ->

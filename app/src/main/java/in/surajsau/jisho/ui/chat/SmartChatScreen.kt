@@ -6,8 +6,10 @@ import `in`.surajsau.jisho.domain.models.chat.ChatDetails
 import `in`.surajsau.jisho.domain.models.chat.ChatRowModel
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -72,6 +74,15 @@ fun SmartChatScreen(
                     .weight(1f),
                 messages = state.messages
             )
+
+            if (state.suggestions is SmartChatViewModel.Suggestions.Show) {
+                SuggestionsContainer(
+                    modifier = Modifier.fillMaxWidth()
+                        .padding(vertical = 4.dp),
+                    suggestions = state.suggestions.values,
+                    onSuggestionClicked = { event(SmartChatViewModel.Event.SuggestionClicked(it)) }
+                )
+            }
 
             SendMessageContainer(
                 model = state.messageContainerModel,
@@ -146,6 +157,40 @@ private fun ChatBody(
                         bottom = 8.dp
                     )
             )
+        }
+    }
+}
+
+
+@Composable
+private fun SuggestionsContainer(
+    suggestions: List<String>,
+    modifier: Modifier = Modifier,
+    onSuggestionClicked: (String) -> Unit,
+) {
+
+    LazyRow(modifier = modifier) {
+        itemsIndexed(items = suggestions) { index, text ->
+            Box(
+                modifier = Modifier
+                    .clickable { onSuggestionClicked.invoke(text) }
+                    .padding(
+                        start = if (index == 0) 8.dp else 0.dp,
+                        end = 8.dp
+                    )
+                    .background(
+                        color = MaterialTheme.colors.primary,
+                        shape = RoundedCornerShape(size = 16.dp)
+                    )
+            ) {
+                Text(
+                    text = text,
+                    modifier = Modifier
+                        .padding(horizontal = 8.dp, vertical = 4.dp),
+                    maxLines = 1,
+                    color = Color.White
+                )
+            }
         }
     }
 }
@@ -231,6 +276,20 @@ private fun previewSendMessageContainer() {
             ),
             onMessageTextChanged = {},
             onSendMessageClicked = {}
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun previewSuggestionsContainer() {
+
+    Box(modifier = Modifier.fillMaxWidth().background(Color.White)) {
+        SuggestionsContainer(
+            modifier = Modifier.fillMaxWidth()
+                .padding(vertical = 4.dp),
+            suggestions = listOf("Oh", "OK", "Lol", "Fine with me!", "LMAO"),
+            onSuggestionClicked = {}
         )
     }
 }

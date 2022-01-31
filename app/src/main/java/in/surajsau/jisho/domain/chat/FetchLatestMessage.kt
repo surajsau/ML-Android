@@ -3,10 +3,10 @@ package `in`.surajsau.jisho.domain.chat
 import `in`.surajsau.jisho.base.Optional
 import `in`.surajsau.jisho.data.ChatDataProvider
 import `in`.surajsau.jisho.data.chat.EntityExtractionProvider
+import `in`.surajsau.jisho.data.chat.SmartRepliesProvider
 import `in`.surajsau.jisho.data.model.ChatMessageModel
 import `in`.surajsau.jisho.domain.models.chat.ChatAnnotation
 import `in`.surajsau.jisho.domain.models.chat.ChatRowModel
-import android.util.Log
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextDecoration
@@ -18,6 +18,7 @@ import kotlinx.coroutines.flow.*
 import javax.inject.Inject
 
 class FetchLatestMessage @Inject constructor(
+    private val smartRepliesProvider: SmartRepliesProvider,
     private val chatDataProvider: ChatDataProvider,
     private val entityExtractionProvider: EntityExtractionProvider,
 ) {
@@ -25,6 +26,11 @@ class FetchLatestMessage @Inject constructor(
     fun invoke(): Flow<ChatRowModel> {
         return chatDataProvider.latestMessage
             .receiveAsFlow()
+            .onEach {
+                if (it is ChatMessageModel.Message) {
+                    smartRepliesProvider.addMessage(it)
+                }
+            }
             .map {
                 when (it) {
                     is ChatMessageModel.Message -> {

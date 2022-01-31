@@ -22,6 +22,7 @@ class SmartChatViewModelImpl @Inject constructor(
     private val sendMessage: SendMessage,
     private val fetchChatDetails: FetchChatDetails,
     private val fetchLatestMessage: FetchLatestMessage,
+    private val fetchSuggestions: FetchSuggestions,
     private val checkEntityExtractorAvailability: CheckEntityExtractorAvailability,
 ): ViewModel(), SmartChatViewModel {
 
@@ -35,6 +36,8 @@ class SmartChatViewModelImpl @Inject constructor(
 
     private val _messageContainerModel = MutableStateFlow(SmartChatViewModel.MessageContainerModel())
 
+    private val _suggestions = MutableStateFlow<SmartChatViewModel.Suggestions>(SmartChatViewModel.Suggestions.Hide)
+
     init {
         viewModelScope.launch {
             fetchLatestMessage.invoke()
@@ -42,8 +45,8 @@ class SmartChatViewModelImpl @Inject constructor(
                     val messages = _messages.value.toMutableList()
                     _messages.value = messages.apply {
                         when {
-                            chatRowModel is ChatRowModel.Message && chatRowModel.isLocal -> add(0, chatRowModel)
-                            chatRowModel is ChatRowModel.Message && !chatRowModel.isLocal -> {
+                            chatRowModel !is ChatRowModel.Typing && chatRowModel.isLocal -> add(0, chatRowModel)
+                            chatRowModel !is ChatRowModel.Typing && !chatRowModel.isLocal -> {
                                 val existingTypingIndex = indexOfFirst { it is ChatRowModel.Typing }
                                 if (existingTypingIndex == -1)
                                     add(0, chatRowModel)
@@ -54,6 +57,15 @@ class SmartChatViewModelImpl @Inject constructor(
                             else -> add(0, chatRowModel)
                         }
                     }
+                }
+                .flowOn(Dispatchers.IO)
+                .collect()
+        }
+
+        viewModelScope.launch {
+            fetchSuggestions.invoke()
+                .onEach {
+                    _suggestions.value = SmartChatViewModel.Suggestions.Show(values = it)
                 }
                 .flowOn(Dispatchers.IO)
                 .collect()
@@ -77,15 +89,17 @@ class SmartChatViewModelImpl @Inject constructor(
             _messages,
             _chatDetails,
             _modelStatus,
-            _messageContainerModel
-        ) { messages, chatDetails, modelStatus, messageContainerModel ->
+            _messageContainerModel,
+            _suggestions,
+        ) { messages, chatDetails, modelStatus, messageContainerModel, suggestions ->
             val showLoader = modelStatus != MLKitModelStatus.Downloaded || chatDetails is Optional.Empty
 
             SmartChatViewModel.State(
                 showLoader = showLoader,
                 messages = messages,
                 chatDetails = chatDetails,
-                messageContainerModel = messageContainerModel
+                messageContainerModel = messageContainerModel,
+                suggestions = suggestions,
             )
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(), SmartChatViewModel.State())
 
@@ -93,8 +107,6 @@ class SmartChatViewModelImpl @Inject constructor(
         when (event) {
             is SmartChatViewModel.Event.MessageTextChanged -> {
                 val imageUrl = SmartChatViewModel.ImageUrlRegex.find(event.message)
-
-                Log.e("SmartChat", "${imageUrl?.value}")
 
                 _messageContainerModel.value = _messageContainerModel.value.copy(
                     isSendButtonEnabled = event.message.isNotEmpty(),
@@ -104,6 +116,9 @@ class SmartChatViewModelImpl @Inject constructor(
             }
 
             is SmartChatViewModel.Event.SendMessageClicked -> {
+                if (_suggestions.value is SmartChatViewModel.Suggestions.Show)
+                    _suggestions.value = SmartChatViewModel.Suggestions.Hide
+
                 viewModelScope.launch {
                     val messageContainerModel = _messageContainerModel.value
                     sendMessage.invoke(
@@ -120,6 +135,11 @@ class SmartChatViewModelImpl @Inject constructor(
                     )
                 }
             }
+
+            is SmartChatViewModel.Event.SuggestionClicked -> {
+                _messageContainerModel.value = _messageContainerModel.value.copy(text = event.text)
+                _suggestions.value = SmartChatViewModel.Suggestions.Hide
+            }
         }
     }
 
@@ -130,6 +150,7 @@ interface SmartChatViewModel : SingleFlowViewModel<SmartChatViewModel.Event, Sma
     sealed class Event {
         data class MessageTextChanged(val message: String): Event()
         object SendMessageClicked: Event()
+        data class SuggestionClicked(val text: String): Event()
     }
 
     data class State(
@@ -137,6 +158,7 @@ interface SmartChatViewModel : SingleFlowViewModel<SmartChatViewModel.Event, Sma
         val messages: List<ChatRowModel> = emptyList(),
         val chatDetails: Optional<ChatDetails> = Optional.Empty,
         val messageContainerModel: MessageContainerModel = MessageContainerModel(),
+        val suggestions: Suggestions = Suggestions.Hide
     )
 
     enum class CurrentUser {
@@ -151,8 +173,14 @@ interface SmartChatViewModel : SingleFlowViewModel<SmartChatViewModel.Event, Sma
         val currentUser: CurrentUser = CurrentUser.LOCAL,
         val isSendButtonEnabled: Boolean = false,
         val imageUrl: String? = null,
-        val text: String = ""
+        val text: String = "",
     )
+
+    sealed class Suggestions {
+        object Hide: Suggestions()
+
+        data class Show(val values: List<String>): Suggestions()
+    }
 
     companion object {
         val ImageUrlRegex = Regex("(https?:\\/\\/.*\\.(?:png|jpg|jpeg))")

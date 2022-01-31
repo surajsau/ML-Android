@@ -3,6 +3,8 @@ package `in`.surajsau.jisho.di
 import `in`.surajsau.jisho.data.*
 import `in`.surajsau.jisho.data.chat.EntityExtractionProvider
 import `in`.surajsau.jisho.data.chat.EntityExtractionpProviderImpl
+import `in`.surajsau.jisho.data.chat.SmartRepliesProvider
+import `in`.surajsau.jisho.data.chat.SmartRepliesProviderImpl
 import `in`.surajsau.jisho.data.db.AppDb
 import `in`.surajsau.jisho.data.facenet.*
 import android.content.Context
@@ -21,12 +23,15 @@ import javax.inject.Singleton
 abstract class DataModule {
 
     @Binds
+    @Singleton
     abstract fun bindTranslatorProvider(provider: TranslatorProviderImpl): TranslatorProvider
 
     @Binds
+    @Singleton
     abstract fun bindDigitalInkProvider(provider: DigitalInkProviderImpl): DigitalInkProvider
 
     @Binds
+    @Singleton
     abstract fun bindScreenDataProvider(provider: ScreensDataProviderImpl): ScreensDataProvider
 
     @Binds
@@ -34,14 +39,20 @@ abstract class DataModule {
     abstract fun bindChatProvider(provider: ChatDataProviderImpl): ChatDataProvider
 
     @Binds
+    @Singleton
     abstract fun bindFaceDetectionProvider(provider: FaceDetectionProviderImpl): FaceDetectionProvider
 
     @Binds
+    @Singleton
     abstract fun bindCardDataProvider(provider: CardDataProviderImpl): CardDataProvider
 
     @Binds
     @Singleton
     abstract fun bindEntityExtractionProvider(provider: EntityExtractionpProviderImpl): EntityExtractionProvider
+
+    @Binds
+    @Singleton
+    abstract fun bindSmartRepliesProvider(provider: SmartRepliesProviderImpl): SmartRepliesProvider
 
     companion object {
 
