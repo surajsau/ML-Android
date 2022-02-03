@@ -4,7 +4,11 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.provider.AlarmClock
+import android.util.Log
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
@@ -15,12 +19,12 @@ import com.soywiz.klock.DateTime
 @Composable
 fun rememberExternalIntentHandler(): ExternalIntentHandler {
     val context = LocalContext.current
-    val permissionState = rememberPermissionState(permission = android.Manifest.permission.CALL_PHONE)
-    return remember { ExternalIntentHandler(context) }
+
+    return remember { ExternalIntentHandler(context = context) }
 }
 
 class ExternalIntentHandler constructor(
-    private val context: Context
+    private val context: Context,
 ) {
 
     fun openMap(location: String) {
@@ -30,9 +34,7 @@ class ExternalIntentHandler constructor(
             setPackage("com.google.android.apps.maps")
         }
 
-        if (intent.resolveActivity(context.packageManager) != null) {
-            context.startActivity(intent)
-        }
+        context.startActivity(intent)
     }
 
     fun openAlarm(message: String, timestamp: Long) {

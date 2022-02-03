@@ -42,10 +42,12 @@ class EmojiLabellingDataProviderImpl @Inject constructor(
         labeller.process(inputImage)
             .addOnSuccessListener { labels ->
                 val result = mutableListOf<Emoji>()
-                labels.forEach { label ->
-                    val emoji = emojis.firstOrNull { it.label == label.text } ?: return@forEach
-                    result.add(emoji)
-                }
+                labels
+                    .filter { label -> label.confidence > 0.4 }
+                    .forEach { label ->
+                        val emoji = emojis.firstOrNull { it.label == label.text && it.emojis.isNotEmpty() } ?: return@forEach
+                        result.add(emoji)
+                    }
 
                 trySend(result)
             }
