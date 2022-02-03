@@ -6,6 +6,7 @@ import `in`.surajsau.jisho.domain.chat.*
 import `in`.surajsau.jisho.domain.models.chat.ChatDetails
 import `in`.surajsau.jisho.domain.models.chat.ChatRowModel
 import `in`.surajsau.jisho.ui.digitalink.MLKitModelStatus
+import android.graphics.Bitmap
 import android.util.Log
 import androidx.compose.runtime.compositionLocalOf
 import androidx.lifecycle.ViewModel
@@ -24,6 +25,8 @@ class SmartChatViewModelImpl @Inject constructor(
     private val fetchLatestMessage: FetchLatestMessage,
     private val fetchSuggestions: FetchSuggestions,
     private val checkEntityExtractorAvailability: CheckEntityExtractorAvailability,
+    private val loadEmojis: LoadEmojis,
+    private val getEmojiSuggestions: GetEmojiSuggestions,
 ): ViewModel(), SmartChatViewModel {
 
     private val userSwitchRandom = Random(1)
@@ -82,6 +85,10 @@ class SmartChatViewModelImpl @Inject constructor(
                 .flowOn(Dispatchers.IO)
                 .collect { _modelStatus.value = it }
         }
+
+        viewModelScope.launch(Dispatchers.IO) {
+            loadEmojis.invoke()
+        }
     }
 
     override val state: StateFlow<SmartChatViewModel.State>
@@ -119,7 +126,7 @@ class SmartChatViewModelImpl @Inject constructor(
                 if (_suggestions.value is SmartChatViewModel.Suggestions.Show)
                     _suggestions.value = SmartChatViewModel.Suggestions.Hide
 
-                viewModelScope.launch {
+                viewModelScope.launch(Dispatchers.IO) {
                     val messageContainerModel = _messageContainerModel.value
                     sendMessage.invoke(
                         imageUrl = messageContainerModel.imageUrl,
@@ -140,6 +147,18 @@ class SmartChatViewModelImpl @Inject constructor(
                 _messageContainerModel.value = _messageContainerModel.value.copy(text = event.text)
                 _suggestions.value = SmartChatViewModel.Suggestions.Hide
             }
+
+            is SmartChatViewModel.Event.BitmapLoaded -> {
+                viewModelScope.launch {
+                    getEmojiSuggestions.invoke(event.bitmap)
+                        .flowOn(Dispatchers.IO)
+                        .collect {
+                            _suggestions.value = SmartChatViewModel.Suggestions.Show(
+                                values = it.flatMap { emoji -> emoji.emojis }
+                            )
+                        }
+                }
+            }
         }
     }
 
@@ -151,6 +170,7 @@ interface SmartChatViewModel : SingleFlowViewModel<SmartChatViewModel.Event, Sma
         data class MessageTextChanged(val message: String): Event()
         object SendMessageClicked: Event()
         data class SuggestionClicked(val text: String): Event()
+        data class BitmapLoaded(val bitmap: Bitmap): Event()
     }
 
     data class State(
@@ -183,7 +203,7 @@ interface SmartChatViewModel : SingleFlowViewModel<SmartChatViewModel.Event, Sma
     }
 
     companion object {
-        val ImageUrlRegex = Regex("(https?:\\/\\/.*\\.(?:png|jpg|jpeg))")
+        val ImageUrlRegex = Regex("(https?:\\/\\/.*)")
     }
 }
 

@@ -1,10 +1,7 @@
 package `in`.surajsau.jisho.di
 
 import `in`.surajsau.jisho.data.*
-import `in`.surajsau.jisho.data.chat.EntityExtractionProvider
-import `in`.surajsau.jisho.data.chat.EntityExtractionpProviderImpl
-import `in`.surajsau.jisho.data.chat.ReplySuggestionProvider
-import `in`.surajsau.jisho.data.chat.ReplySuggestionProviderImpl
+import `in`.surajsau.jisho.data.chat.*
 import `in`.surajsau.jisho.data.db.AppDb
 import `in`.surajsau.jisho.data.facenet.*
 import android.content.Context
@@ -52,6 +49,10 @@ abstract class DataModule {
     @Binds
     @Singleton
     abstract fun bindSmartRepliesProvider(provider: ReplySuggestionProviderImpl): ReplySuggestionProvider
+
+    @Binds
+    @Singleton
+    abstract fun bindEmojiLabellingProvider(provider: EmojiLabellingDataProviderImpl): EmojiLabellingDataProvider
 
     companion object {
 

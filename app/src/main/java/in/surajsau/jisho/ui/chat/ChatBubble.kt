@@ -1,6 +1,9 @@
 package `in`.surajsau.jisho.ui.chat
 
+import `in`.surajsau.jisho.base.use
 import `in`.surajsau.jisho.domain.models.chat.ChatRowModel
+import android.graphics.Bitmap
+import android.graphics.drawable.BitmapDrawable
 import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -9,12 +12,14 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -23,12 +28,14 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.LocalImageLoader
 import coil.compose.rememberImagePainter
+import coil.request.ImageRequest
 
 @Composable
 fun ChatRow(
     chatRowModel: ChatRowModel,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Box(modifier = modifier) {
         when (chatRowModel) {
@@ -58,7 +65,7 @@ fun ChatRow(
                             )
                             .align(
                                 alignment = if (chatRowModel.isLocal) Alignment.End else Alignment.Start
-                            )
+                            ),
                     )
                 }
 
@@ -140,7 +147,28 @@ private fun PictureMessageBubble(
     modifier: Modifier = Modifier,
 ) {
 
-    val painter = rememberImagePainter(data = chatRowModel.imageUrl)
+    val (_, event) = use(viewModel = LocalSmartChatViewModel.current, initialStateValue = SmartChatViewModel.State())
+
+    var imageBitmap by remember { mutableStateOf<Bitmap?>(null) }
+
+    val imageLoader = LocalImageLoader.current
+
+    val context = LocalContext.current
+
+    DisposableEffect(chatRowModel.imageUrl) {
+        val request = ImageRequest.Builder(context)
+            .data(chatRowModel.imageUrl)
+            .target {
+                val bitmap = (it as? BitmapDrawable)?.bitmap ?: return@target
+                event(SmartChatViewModel.Event.BitmapLoaded(bitmap))
+                imageBitmap = bitmap
+            }
+            .build()
+
+        val disposable = imageLoader.enqueue(request)
+
+        onDispose { disposable.dispose() }
+    }
 
     Column(modifier = modifier
         .background(
@@ -150,13 +178,16 @@ private fun PictureMessageBubble(
         .padding(horizontal = 16.dp, vertical = 8.dp)
     ) {
 
-        Image(
-            painter = painter,
-            contentDescription = "",
-            modifier = Modifier.fillMaxWidth()
-                .aspectRatio(ratio = 1f),
-            contentScale = ContentScale.Crop
-        )
+        if (imageBitmap != null) {
+            Image(
+                bitmap = imageBitmap!!.asImageBitmap(),
+                contentDescription = "",
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .aspectRatio(ratio = 1f),
+                contentScale = ContentScale.Crop
+            )
+        }
 
         ChatClickableText(
             annotatedString = chatRowModel.message,

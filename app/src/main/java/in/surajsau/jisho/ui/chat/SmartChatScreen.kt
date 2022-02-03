@@ -155,7 +155,7 @@ private fun ChatBody(
                     .padding(
                         top = if (index == 0) 8.dp else 0.dp,
                         bottom = 8.dp
-                    )
+                    ),
             )
         }
     }
