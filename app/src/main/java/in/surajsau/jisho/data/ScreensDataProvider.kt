@@ -27,16 +27,16 @@ class ScreensDataProviderImpl @Inject constructor(): ScreensDataProvider {
                 ),
 
                 Screen(
-                    destinations = Destinations.Gpt,
+                    destinations = Destinations.SmartChat,
                     previewImage = "",
-                    title = "Text Suggestion using GPT",
-                    description = "Using Huggingface/Transformers GPT model for text completion",
-                    tags = listOf("MLKit", "HuggingFace", "TFLite")
+                    title = "Smart Chat",
+                    description = "Using MLKit Smart Replies, MLKit Entity Extraction and Image Classification",
+                    tags = listOf("MLKit", "TorchVision")
                 ),
 
                 Screen(
                     destinations = Destinations.Facenet,
-                    previewImage = "",
+                    previewImage = "https://github.com/surajsau/ML-Android/raw/main/screenshots/face.gif",
                     title = "On-device Face Recognition & Classification",
                     description = "Using MLKit's FaceDetection to crop out face and using Sirius-AI's MobileFacenet tflite for recognition",
                     tags = listOf("MLKit", "TFLite")
@@ -44,7 +44,7 @@ class ScreensDataProviderImpl @Inject constructor(): ScreensDataProvider {
 
                 Screen(
                     destinations = Destinations.CardReader,
-                    previewImage = "",
+                    previewImage = "https://github.com/surajsau/ML-Android/raw/main/screenshots/card_reader.gif",
                     title = "Card Reader",
                     description = "Using MLKit's Text Recognition",
                     tags = listOf("MLKit")

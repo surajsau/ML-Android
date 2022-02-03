@@ -43,6 +43,9 @@ android {
     composeOptions {
         kotlinCompilerExtensionVersion = "1.0.4"
     }
+    androidResources {
+        noCompress("tflite")
+    }
     packagingOptions {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
@@ -89,16 +92,20 @@ dependencies {
     implementation(Dep.MLKit.Translation)
     implementation(Dep.MLKit.FaceDetection)
     implementation(Dep.MLKit.TextRecognition)
-    implementation(Dep.MLKit.TextRecognitionJp)
-    implementation(Dep.MLKit.TextRecognitionDev)
+    implementation(Dep.MLKit.EntityExtraction)
+    implementation(Dep.MLKit.SmartReplies)
+    implementation(Dep.MLKit.ImageLabeling)
 
-    implementation(Dep.Retrofit.Core)
-    implementation(Dep.Retrofit.GsonConverter)
+    implementation(Dep.Emoji.Core)
+    implementation(Dep.Emoji.Views)
+    implementation(Dep.Emoji.Helper)
 
     implementation(Dep.Coil.Compose)
     implementation(Dep.Coil.Gif)
 
     implementation(Dep.Klock)
+
+    implementation(Dep.Gson)
 
     implementation(Dep.Room.Core)
     implementation(Dep.Room.Ktx)

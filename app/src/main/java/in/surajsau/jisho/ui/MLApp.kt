@@ -2,19 +2,18 @@ package `in`.surajsau.jisho.ui
 
 import `in`.surajsau.jisho.base.BitmapCache
 import `in`.surajsau.jisho.base.LocalBitmapCache
-import `in`.surajsau.jisho.ui.cardreader.CardReaderScreen
 import `in`.surajsau.jisho.ui.cardreader.CardReaderViewModelImpl
 import `in`.surajsau.jisho.ui.cardreader.LocalOnboardingViewModel
 import `in`.surajsau.jisho.ui.cardreader.OnBoardingScreen
+import `in`.surajsau.jisho.ui.chat.LocalSmartChatViewModel
+import `in`.surajsau.jisho.ui.chat.SmartChatScreen
+import `in`.surajsau.jisho.ui.chat.SmartChatViewModelImpl
 import `in`.surajsau.jisho.ui.digitalink.DigitalInkScreen
 import `in`.surajsau.jisho.ui.digitalink.DigitalInkViewModelImpl
 import `in`.surajsau.jisho.ui.digitalink.LocalDigitalInkViewModel
 import `in`.surajsau.jisho.ui.facenet.FacenetScreen
 import `in`.surajsau.jisho.ui.facenet.FacenetViewModelImpl
 import `in`.surajsau.jisho.ui.facenet.LocalFacenetViewModel
-import `in`.surajsau.jisho.ui.gpt.ChatSuggestionScreen
-import `in`.surajsau.jisho.ui.gpt.ChatSuggestionViewModelImpl
-import `in`.surajsau.jisho.ui.gpt.LocalChatSuggestionViewModel
 import `in`.surajsau.jisho.ui.home.HomeScreen
 import `in`.surajsau.jisho.ui.home.HomeViewModelImpl
 import `in`.surajsau.jisho.ui.home.LocalHomeViewModel
@@ -77,13 +76,13 @@ fun MLApp(
                         )
                     }
                 }
-                composable(route = Destinations.Gpt.value) {
+                composable(route = Destinations.SmartChat.value) {
                     CompositionLocalProvider(
-                        LocalChatSuggestionViewModel provides hiltViewModel<ChatSuggestionViewModelImpl>()
+                        LocalSmartChatViewModel provides hiltViewModel<SmartChatViewModelImpl>(),
                     ) {
-                        ChatSuggestionScreen(
+                        SmartChatScreen(
                             modifier = Modifier.fillMaxSize(),
-                            navigateBack = { navController.popBackStack() }
+                            onDismiss = { navController.popBackStack() }
                         )
                     }
                 }

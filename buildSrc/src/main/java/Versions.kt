@@ -41,9 +41,14 @@ object Dep {
         object MLKit {
             const val DigitalInk = "17.0.0"
             const val Translation = "16.1.2"
-            const val FaceDetection = "16.1.3"
-            const val TextRecognition = "16.0.0-beta2"
+            const val FaceDetection = "16.1.4"
+            const val TextRecognition = "16.0.0-beta3"
+            const val EntityExtraction = "16.0.0-beta4"
+            const val SmartReplies = "17.0.0"
+            const val ImageLabeling = "17.0.7"
         }
+
+        const val Emoji = "1.1.0-beta01"
 
         const val CameraX = "1.0.1"
 
@@ -146,11 +151,20 @@ object Dep {
 
     const val Klock = "com.soywiz.korlibs.klock:klock:${Versions.Klock}"
 
+    object Emoji {
+        const val Core = "androidx.emoji2:emoji2:${Versions.Emoji}"
+        const val Views = "androidx.emoji2:emoji2-views:${Versions.Emoji}"
+        const val Helper = "androidx.emoji2:emoji2-views-helper:${Versions.Emoji}"
+    }
+
     object MLKit {
         const val Translation = "com.google.mlkit:translate:${Versions.MLKit.Translation}"
         const val FaceDetection = "com.google.mlkit:face-detection:${Versions.MLKit.FaceDetection}"
         const val DigitalInk = "com.google.mlkit:digital-ink-recognition:${Versions.MLKit.DigitalInk}"
         const val TextRecognition = "com.google.mlkit:text-recognition:${Versions.MLKit.TextRecognition}"
+        const val EntityExtraction = "com.google.mlkit:entity-extraction:${Versions.MLKit.EntityExtraction}"
+        const val SmartReplies = "com.google.mlkit:smart-reply:${Versions.MLKit.SmartReplies}"
+        const val ImageLabeling = "com.google.mlkit:image-labeling:${Versions.MLKit.ImageLabeling}"
 
         const val TextRecognitionJp = "com.google.mlkit:text-recognition-japanese:${Versions.MLKit.TextRecognition}"
         const val TextRecognitionDev = "com.google.mlkit:text-recognition-devanagari:${Versions.MLKit.TextRecognition}"

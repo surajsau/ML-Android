@@ -1,14 +1,9 @@
 package `in`.surajsau.jisho.di
 
 import `in`.surajsau.jisho.data.*
-import `in`.surajsau.jisho.data.chat.ChatProvider
-import `in`.surajsau.jisho.data.chat.ChatProviderImpl
+import `in`.surajsau.jisho.data.chat.*
 import `in`.surajsau.jisho.data.db.AppDb
 import `in`.surajsau.jisho.data.facenet.*
-import `in`.surajsau.jisho.data.gpt.BpeTokenProvider
-import `in`.surajsau.jisho.data.gpt.GPTEncoderProvider
-import `in`.surajsau.jisho.data.gpt.GPTProvider
-import `in`.surajsau.jisho.data.gpt.GPTProviderImpl
 import android.content.Context
 import androidx.room.Room
 import dagger.Binds
@@ -24,25 +19,40 @@ import javax.inject.Singleton
 abstract class DataModule {
 
     @Binds
+    @Singleton
     abstract fun bindTranslatorProvider(provider: TranslatorProviderImpl): TranslatorProvider
 
     @Binds
+    @Singleton
     abstract fun bindDigitalInkProvider(provider: DigitalInkProviderImpl): DigitalInkProvider
 
     @Binds
+    @Singleton
     abstract fun bindScreenDataProvider(provider: ScreensDataProviderImpl): ScreensDataProvider
 
     @Binds
-    abstract fun bindChatProvider(provider: ChatProviderImpl): ChatProvider
+    @Singleton
+    abstract fun bindChatProvider(provider: ChatDataProviderImpl): ChatDataProvider
 
     @Binds
-    abstract fun bindGptProvider(provider: GPTProviderImpl): GPTProvider
-
-    @Binds
+    @Singleton
     abstract fun bindFaceDetectionProvider(provider: FaceDetectionProviderImpl): FaceDetectionProvider
 
     @Binds
+    @Singleton
     abstract fun bindCardDataProvider(provider: CardDataProviderImpl): CardDataProvider
+
+    @Binds
+    @Singleton
+    abstract fun bindEntityExtractionProvider(provider: EntityExtractionpProviderImpl): EntityExtractionProvider
+
+    @Binds
+    @Singleton
+    abstract fun bindSmartRepliesProvider(provider: ReplySuggestionProviderImpl): ReplySuggestionProvider
+
+    @Binds
+    @Singleton
+    abstract fun bindEmojiLabellingProvider(provider: EmojiLabellingDataProviderImpl): EmojiLabellingDataProvider
 
     companion object {
 
@@ -71,13 +81,5 @@ abstract class DataModule {
             @ApplicationContext context: Context,
             fileProvider: FileProvider,
         ): FaceRecognitionProvider = FaceRecognitionProviderImpl(context, fileProvider)
-
-        @Provides
-        @Singleton
-        fun provideGPTEncoderProvider(fileProvider: FileProvider) = GPTEncoderProvider(fileProvider)
-
-        @Provides
-        @Singleton
-        fun provideBpeTokenProvider(fileProvider: FileProvider) = BpeTokenProvider(fileProvider)
     }
 }
