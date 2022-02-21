@@ -1,5 +1,5 @@
 # ML Android
- Implementing various ML usecases in Android
+Implementing various ML usecases in Android using strictly Jetpack Compose
  
 | **Demo** | **About** |
 |--|--|
